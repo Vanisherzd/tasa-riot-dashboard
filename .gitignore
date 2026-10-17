@@ -1,4 +1,5 @@
 web/public/
+data/rx_logs/*_M9_passes_*.csv
 *.log
 web/.update.lock
 web/.update.lockdir/
