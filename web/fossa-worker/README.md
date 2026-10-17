@@ -14,20 +14,21 @@ wrangler kv namespace create FOSSA_KV
 把指令輸出的 namespace `id` 填入 `wrangler.toml` 的 `[[kv_namespaces]]`，再設定 secret 並部署：
 
 ```sh
-wrangler secret put WEBHOOK_TOKEN
+wrangler secret put INGEST_TOKEN   # 給 FOSSA 的收件 token（≥16 字元，建議 openssl rand -hex 24）
+wrangler secret put EXPORT_TOKEN   # 給儀表板拉取的匯出 token（另一組）
 wrangler deploy
 ```
 
 部署後端點為：
 
 ```text
-https://fossa-webhook.<subdomain>.workers.dev/fossa/<TOKEN>
+https://fossa-webhook.<subdomain>.workers.dev/fossa/<INGEST_TOKEN>
 ```
 
 到 FOSSA IoT Hub → **Register your Device** → **Integration**，填入上述端點並選擇 **with metadata**。儀表板使用的讀取網址是：
 
 ```text
-https://fossa-webhook.<subdomain>.workers.dev/export/<TOKEN>
+https://fossa-webhook.<subdomain>.workers.dev/export/<EXPORT_TOKEN>
 ```
 
 健康檢查不需要 token：

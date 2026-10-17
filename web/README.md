@@ -51,7 +51,7 @@ sh web/deploy/sync_dashboard_repo.sh /Users/laizhendong/Desktop/tasa-riot-dashbo
 
 ## FOSSA 接入
 
-GitHub Pages／Cloudflare Pages 都是靜態網站，不能直接接收 FOSSA POST。`web/fossa-worker/` 提供一個 Cloudflare Worker：`POST /fossa/<TOKEN>` 接收 webhook 並寫入 KV，`GET /export/<TOKEN>` 供 Actions 匯出。完整指令見 [fossa-worker/README.md](fossa-worker/README.md)。
+GitHub Pages／Cloudflare Pages 都是靜態網站，不能直接接收 FOSSA POST。`web/fossa-worker/` 提供一個 Cloudflare Worker：`POST /fossa/<INGEST_TOKEN>` 接收 webhook 並寫入 KV，`GET /export/<EXPORT_TOKEN>` 供 Actions 匯出。完整指令見 [fossa-worker/README.md](fossa-worker/README.md)。
 
 ### 1. 部署 Worker
 
@@ -61,15 +61,16 @@ cd web/fossa-worker
 wrangler login
 wrangler kv namespace create FOSSA_KV
 # 將輸出的 id 填入 wrangler.toml
-wrangler secret put WEBHOOK_TOKEN
+wrangler secret put INGEST_TOKEN   # 給 FOSSA 的收件 token（≥16 字元，建議 openssl rand -hex 24）
+wrangler secret put EXPORT_TOKEN   # 給儀表板拉取的匯出 token（另一組）
 wrangler deploy
 ```
 
 請用至少 32 bytes 的隨機 URL-safe token，且不要 commit。部署後會得到：
 
 ```text
-Webhook：https://fossa-webhook.<subdomain>.workers.dev/fossa/<TOKEN>
-Export：https://fossa-webhook.<subdomain>.workers.dev/export/<TOKEN>
+Webhook：https://fossa-webhook.<subdomain>.workers.dev/fossa/<INGEST_TOKEN>
+Export：https://fossa-webhook.<subdomain>.workers.dev/export/<EXPORT_TOKEN>
 ```
 
 ### 2. 設定 FOSSA IoT Hub
@@ -83,7 +84,7 @@ IoT Hub 另有需 Manager 建立 API key 的 REST API，但正式路徑與回應
 到 GitHub repository → Settings → Secrets and variables → Actions → Secrets，新增：
 
 ```text
-FOSSA_EXPORT_URL=https://fossa-webhook.<subdomain>.workers.dev/export/<TOKEN>
+FOSSA_EXPORT_URL=https://fossa-webhook.<subdomain>.workers.dev/export/<EXPORT_TOKEN>
 ```
 
 workflow 會把 `data/fossa/messages.jsonl` 放入 Actions cache，建站前增量匯出並去重；該檔已忽略，不會 commit 到主倉或公開鏡像。
@@ -96,7 +97,7 @@ workflow 會把 `data/fossa/messages.jsonl` 放入 Actions cache，建站前增�
 curl -fsS -X POST \
   -H 'Content-Type: application/json' \
   --data '{"mac":"01504B004800","queue_timestamp":1760091985,"sat_timestamp":1760092185,"rssi":-87,"message":"aGVsbG8gd29ybGQ=","nodeId":"67dd4ee23f647d4b31e0f8c8","source":"satellite"}' \
-  'https://fossa-webhook.<subdomain>.workers.dev/fossa/<TOKEN>'
+  'https://fossa-webhook.<subdomain>.workers.dev/fossa/<INGEST_TOKEN>'
 ```
 
 應回傳 `{"ok":true}`。接著到 Actions 手動執行 **Deploy dashboard**，或使用：

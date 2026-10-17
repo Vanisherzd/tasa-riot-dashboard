@@ -111,8 +111,15 @@ export default {
       return jsonResponse({ ok: true });
     }
 
+    // Two separate secrets: INGEST_TOKEN (given to FOSSA for POST) and EXPORT_TOKEN
+    // (used by the dashboard pipeline for GET). A leaked ingest URL cannot read data.
+    // Both must be set and at least 16 characters, otherwise every route is 404.
     const parts = url.pathname.split("/").filter(Boolean);
-    if (parts.length !== 2 || !tokenMatches(parts[1], env.WEBHOOK_TOKEN)) {
+    if (parts.length !== 2) {
+      return new Response("Not Found", { status: 404 });
+    }
+    const expected = parts[0] === "fossa" ? env.INGEST_TOKEN : parts[0] === "export" ? env.EXPORT_TOKEN : undefined;
+    if (typeof expected !== "string" || expected.length < 16 || !tokenMatches(parts[1], expected)) {
       return new Response("Not Found", { status: 404 });
     }
 
