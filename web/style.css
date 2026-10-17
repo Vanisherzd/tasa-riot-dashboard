@@ -152,8 +152,18 @@ h1 {
 .panel--featured { background: var(--surface-raised); }
 .panel__head { display: flex; align-items: end; justify-content: space-between; gap: var(--s4); padding: var(--s6); border-block-end: 1px solid var(--line); }
 .panel__head h2 { margin: 0; font-size: 1.375rem; line-height: 1.25; letter-spacing: -0.015em; }
+.panel__head h3 { margin: 0; font-size: 1rem; line-height: 1.4; }
 .panel__head p { max-inline-size: 66ch; margin: 0; color: var(--ink-muted); font-size: 0.875rem; }
 .panel__body { padding: var(--s6); }
+
+.source-section { display: flex; flex-direction: column; gap: var(--s6); }
+.section-head { padding-inline: 0; }
+.section-head > div { min-inline-size: min(300px, 100%); }
+.section-kicker { margin: 0 0 var(--s1) !important; color: var(--accent) !important; font: 650 0.75rem/1.4 var(--mono); letter-spacing: 0.12em; }
+.empty-state { padding: var(--s8); text-align: center; }
+.empty-state p { margin: 0; }
+.empty-state p + p { margin-block-start: var(--s2); color: var(--ink-muted); }
+.empty-state code { overflow-wrap: anywhere; }
 
 .latest-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: var(--s8); }
 .latest-block h3 { margin: 0 0 var(--s3); font-size: 1rem; }
@@ -169,10 +179,14 @@ h1 {
 .chart-note { fill: var(--ink); font-size: 12px; font-weight: 650; }
 .bar-total { fill: var(--accent); opacity: 0.82; }
 .bar-ok { fill: var(--signal); }
+.bar-fossa { fill: var(--warning); opacity: 0.82; }
+.bar-fossa-valid { fill: var(--signal); opacity: 0.68; }
 .legend { display: flex; flex-wrap: wrap; gap: var(--s4); margin: 0 0 var(--s4); color: var(--ink-muted); font-size: 0.875rem; }
 .legend span { display: inline-flex; align-items: center; gap: var(--s2); }
 .legend i { inline-size: 12px; block-size: 12px; border-radius: 2px; background: var(--accent); }
 .legend .ok { background: var(--signal); }
+.legend .fossa { background: var(--warning); }
+.legend .fossa-valid { background: var(--signal); opacity: 0.68; }
 
 .table-wrap { max-inline-size: 100%; overflow-x: auto; }
 table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 0.875rem; font-variant-numeric: tabular-nums; }
@@ -185,7 +199,10 @@ tbody th { font-weight: 600; }
 .mono { font-family: var(--mono); font-size: 0.8125rem; }
 .number { text-align: end; }
 .good { color: var(--signal); font-weight: 650; }
+.warning { color: var(--warning); font-weight: 650; }
 .muted { color: var(--ink-muted); }
+.nowrap { white-space: nowrap; }
+.payload { max-inline-size: 52ch; overflow-wrap: anywhere; white-space: normal; }
 .tag { display: inline-block; margin: 1px var(--s1) 1px 0; padding: 2px 6px; border: 1px solid var(--line); border-radius: var(--r-sm); font: 600 0.75rem/1.4 var(--mono); }
 
 .downloads { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr)); gap: 1px; background: var(--line); }

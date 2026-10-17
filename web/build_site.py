@@ -11,20 +11,29 @@ import csv
 import json
 import math
 import shutil
+import sys
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from html import escape
 from pathlib import Path
 from string import Template
-from typing import Final, Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, Final, Iterable, List, Optional, Sequence, Tuple
 from urllib.parse import quote
 
 ROOT: Final = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts.parse_fossa import FossaRecord, load_records  # noqa: E402
+
 WEB_DIR: Final = ROOT / "web"
 PUBLIC_DIR: Final = WEB_DIR / "public"
 DATA_DIR: Final = ROOT / "data" / "rx_logs"
 PASS_DIR: Final = DATA_DIR / "m9_passes"
 FILES_JSON: Final = PASS_DIR / "files.json"
+FOSSA_DIR: Final = ROOT / "data" / "fossa"
+FOSSA_MESSAGES: Final = FOSSA_DIR / "messages.jsonl"
+FOSSA_DEVICES: Final = FOSSA_DIR / "devices.json"
 TAIPEI: Final = timezone(timedelta(hours=8))
 KNOWN_DEVICES: Final = (
     ("cc000001", "蚵棚"),
@@ -89,6 +98,31 @@ class DeviceStats:
     last_lat: Optional[float]
     last_lng: Optional[float]
     latest_voltage: Optional[float]
+
+
+@dataclass(frozen=True)
+class FossaDevice:
+    serial: str
+    mac: str
+    node_id: str
+
+
+@dataclass(frozen=True)
+class FossaDeviceStats:
+    serial: str
+    mac: str
+    node_id: str
+    last_received_local: Optional[str]
+    n_messages: int
+
+
+@dataclass(frozen=True)
+class DailyComparison:
+    date: str
+    riot_total: int
+    riot_valid: int
+    fossa_total: int
+    fossa_valid: int
 
 
 def optional_float(value: str) -> Optional[float]:
@@ -197,6 +231,101 @@ def device_statistics(packets: Sequence[PacketRow]) -> List[DeviceStats]:
     return stats
 
 
+def load_fossa_devices(path: Path) -> List[FossaDevice]:
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise DashboardDataError(f"無法讀取 {path}: {error}") from error
+    if not isinstance(raw, dict) or not isinstance(raw.get("devices"), list):
+        raise DashboardDataError(f"{path} 必須含 devices 陣列")
+    devices = []
+    for item in raw["devices"]:
+        if not isinstance(item, dict) or not isinstance(item.get("serial"), str):
+            raise DashboardDataError(f"{path} devices 項目缺少 serial")
+        devices.append(
+            FossaDevice(
+                serial=item["serial"],
+                mac=str(item.get("mac", "")),
+                node_id=str(item.get("nodeId", "")),
+            )
+        )
+    return devices
+
+
+def fossa_record_order(record: FossaRecord) -> Tuple[int, str]:
+    timestamp = record.sat_unix or record.received_unix or record.queue_unix or 0
+    return timestamp, record.key
+
+
+def fossa_device_statistics(
+    records: Sequence[FossaRecord], devices: Sequence[FossaDevice]
+) -> List[FossaDeviceStats]:
+    assigned = set()
+    stats = []
+    for device in devices:
+        matches = []
+        for index, record in enumerate(records):
+            mac_matches = bool(device.mac) and record.mac.casefold() == device.mac.casefold()
+            node_matches = bool(device.node_id) and record.node_id == device.node_id
+            if mac_matches or node_matches:
+                assigned.add(index)
+                matches.append(record)
+        latest = max(matches, key=fossa_record_order, default=None)
+        stats.append(
+            FossaDeviceStats(
+                serial=device.serial,
+                mac=device.mac,
+                node_id=device.node_id,
+                last_received_local=(latest.received_at_local or latest.sat_local) if latest else None,
+                n_messages=len(matches),
+            )
+        )
+
+    unregistered: Dict[Tuple[str, str], List[FossaRecord]] = {}
+    for index, record in enumerate(records):
+        if index not in assigned:
+            unregistered.setdefault((record.mac, record.node_id), []).append(record)
+    for (mac, node_id), matches in sorted(unregistered.items()):
+        latest = max(matches, key=fossa_record_order)
+        stats.append(
+            FossaDeviceStats(
+                serial="未登錄",
+                mac=mac,
+                node_id=node_id,
+                last_received_local=latest.received_at_local or latest.sat_local,
+                n_messages=len(matches),
+            )
+        )
+    return stats
+
+
+def daily_comparison(packets: Sequence[PacketRow], records: Sequence[FossaRecord]) -> List[DailyComparison]:
+    riot: Dict[str, Tuple[int, int]] = {}
+    for packet in packets:
+        date = packet.pass_local[:10]
+        if date:
+            total, valid = riot.get(date, (0, 0))
+            riot[date] = total + 1, valid + int(packet.crc_ok)
+
+    fossa: Dict[str, Tuple[int, int]] = {}
+    for record in records:
+        date = (record.sat_local or record.received_at_local or record.queue_local or "")[:10]
+        if date:
+            total, valid = fossa.get(date, (0, 0))
+            fossa[date] = total + 1, valid + int(record.lat is not None and record.lng is not None)
+
+    return [
+        DailyComparison(
+            date=date,
+            riot_total=riot.get(date, (0, 0))[0],
+            riot_valid=riot.get(date, (0, 0))[1],
+            fossa_total=fossa.get(date, (0, 0))[0],
+            fossa_valid=fossa.get(date, (0, 0))[1],
+        )
+        for date in sorted(set(riot) | set(fossa))
+    ]
+
+
 def render_table(headers: Sequence[str], rows: Iterable[Sequence[str]], caption: str) -> str:
     body = "".join("<tr>" + "".join(cells) + "</tr>" for cells in rows)
     if not body:
@@ -208,6 +337,10 @@ def render_table(headers: Sequence[str], rows: Iterable[Sequence[str]], caption:
     )
 
 
+def chart_ticks(peak: int) -> List[int]:
+    return sorted({round(peak * step / 4) for step in range(5)})
+
+
 def grouped_bar_svg(
     chart_id: str,
     title: str,
@@ -216,6 +349,8 @@ def grouped_bar_svg(
     totals: Sequence[int],
     correct: Sequence[int],
     annotations: Optional[Sequence[str]] = None,
+    series_names: Tuple[str, str] = ("封包", "CRC 正確"),
+    bar_classes: Tuple[str, str] = ("bar-total", "bar-ok"),
 ) -> str:
     if not labels:
         return '<div class="empty">沒有可繪製的資料。</div>'
@@ -230,11 +365,10 @@ def grouped_bar_svg(
         f'<title id="{chart_id}-title">{escape(title)}</title>',
         f'<desc id="{chart_id}-desc">{escape(description)}</desc>',
     ]
-    for step in range(5):
-        value = peak * step / 4
-        y = top + plot_height - plot_height * step / 4
+    for value in chart_ticks(peak):
+        y = top + plot_height - plot_height * value / peak
         parts.append(f'<line class="chart-grid" x1="{left}" y1="{y:.1f}" x2="{width-right}" y2="{y:.1f}"/>')
-        parts.append(f'<text class="chart-axis" x="{left-8}" y="{y+4:.1f}" text-anchor="end">{value:.0f}</text>')
+        parts.append(f'<text class="chart-axis" x="{left-8}" y="{y+4:.1f}" text-anchor="end">{value}</text>')
     label_every = max(1, math.ceil(len(labels) / 10))
     for index, (label, total, ok) in enumerate(zip(labels, totals, correct)):
         center = left + slot * (index + 0.5)
@@ -242,12 +376,14 @@ def grouped_bar_svg(
         ok_height = plot_height * ok / peak
         base_y = top + plot_height
         parts.append(
-            f'<rect class="bar-total" x="{center-bar_width-1:.1f}" y="{base_y-total_height:.1f}" '
-            f'width="{bar_width:.1f}" height="{total_height:.1f}"><title>{escape(label)}：封包 {total}</title></rect>'
+            f'<rect class="{bar_classes[0]}" x="{center-bar_width-1:.1f}" y="{base_y-total_height:.1f}" '
+            f'width="{bar_width:.1f}" height="{total_height:.1f}">'
+            f'<title>{escape(label)}：{escape(series_names[0])} {total}</title></rect>'
         )
         parts.append(
-            f'<rect class="bar-ok" x="{center+1:.1f}" y="{base_y-ok_height:.1f}" '
-            f'width="{bar_width:.1f}" height="{ok_height:.1f}"><title>{escape(label)}：CRC 正確 {ok}</title></rect>'
+            f'<rect class="{bar_classes[1]}" x="{center+1:.1f}" y="{base_y-ok_height:.1f}" '
+            f'width="{bar_width:.1f}" height="{ok_height:.1f}">'
+            f'<title>{escape(label)}：{escape(series_names[1])} {ok}</title></rect>'
         )
         if annotations:
             note_y = min(base_y - max(total_height, ok_height) - 7, base_y - 7)
@@ -297,14 +433,218 @@ def snr_chart(packets: Sequence[PacketRow]) -> str:
     )
 
 
+def fossa_daily_chart(comparison: Sequence[DailyComparison]) -> str:
+    fossa_days = [item for item in comparison if item.fossa_total]
+    return grouped_bar_svg(
+        "fossa-daily-chart",
+        "FOSSA 每日訊息數與暫定有效座標數",
+        "每組兩柱分別代表 FOSSA 訊息與依暫定 payload 格式解出合理座標的訊息。",
+        [item.date[5:] for item in fossa_days],
+        [item.fossa_total for item in fossa_days],
+        [item.fossa_valid for item in fossa_days],
+        series_names=("訊息", "暫定有效"),
+        bar_classes=("bar-fossa", "bar-fossa-valid"),
+    )
+
+
+def comparison_chart(comparison: Sequence[DailyComparison]) -> str:
+    if not comparison:
+        return '<div class="empty">沒有可繪製的資料。</div>'
+    width, height = 1200, 390
+    left, right, top, bottom = 54, 18, 44, 92
+    plot_width, plot_height = width - left - right, height - top - bottom
+    values = [
+        max(item.riot_total, item.riot_valid, item.fossa_total, item.fossa_valid)
+        for item in comparison
+    ]
+    peak = max(values, default=1) or 1
+    slot = plot_width / len(comparison)
+    bar_width = min(14.0, slot * 0.18)
+    series = (
+        ("bar-total", "鐳洋收到", [item.riot_total for item in comparison]),
+        ("bar-ok", "鐳洋 CRC 正確", [item.riot_valid for item in comparison]),
+        ("bar-fossa", "FOSSA 收到", [item.fossa_total for item in comparison]),
+        ("bar-fossa-valid", "FOSSA 暫定有效", [item.fossa_valid for item in comparison]),
+    )
+    parts = [
+        '<svg viewBox="0 0 1200 390" role="img" aria-labelledby="comparison-chart-title comparison-chart-desc">',
+        '<title id="comparison-chart-title">鐳洋與 FOSSA 每日接收對照</title>',
+        '<desc id="comparison-chart-desc">每日四柱依序是鐳洋收到、鐳洋 CRC 正確、FOSSA 收到與 FOSSA 暫定有效。</desc>',
+    ]
+    for value in chart_ticks(peak):
+        y = top + plot_height - plot_height * value / peak
+        parts.append(f'<line class="chart-grid" x1="{left}" y1="{y:.1f}" x2="{width-right}" y2="{y:.1f}"/>')
+        parts.append(f'<text class="chart-axis" x="{left-8}" y="{y+4:.1f}" text-anchor="end">{value}</text>')
+    label_every = max(1, math.ceil(len(comparison) / 10))
+    multiple_years = len({item.date[:4] for item in comparison}) > 1
+    for index, item in enumerate(comparison):
+        center = left + slot * (index + 0.5)
+        for series_index, (class_name, series_name, series_values) in enumerate(series):
+            value = series_values[index]
+            bar_height = plot_height * value / peak
+            x = center + (series_index - 1.5) * (bar_width + 2) - bar_width / 2
+            parts.append(
+                f'<rect class="{class_name}" x="{x:.1f}" y="{top+plot_height-bar_height:.1f}" '
+                f'width="{bar_width:.1f}" height="{bar_height:.1f}">'
+                f'<title>{escape(item.date)}：{escape(series_name)} {value}</title></rect>'
+            )
+        if index % label_every == 0 or index == len(comparison) - 1:
+            date_label = item.date[2:] if multiple_years else item.date[5:]
+            parts.append(
+                f'<text class="chart-label" x="{center:.1f}" y="{top+plot_height+18:.1f}" '
+                f'text-anchor="middle">{escape(date_label)}</text>'
+            )
+    parts.append("</svg>")
+    return (
+        '<div class="chart-scroll" tabindex="0" role="region" aria-label="鐳洋與 FOSSA 每日接收對照圖表">'
+        + "".join(parts)
+        + "</div>"
+    )
+
+
 def fmt_number(value: Optional[float], digits: int = 1) -> str:
     return "—" if value is None else f"{value:.{digits}f}"
+
+
+def render_fossa_sections(
+    records: Sequence[FossaRecord],
+    devices: Sequence[FossaDeviceStats],
+    comparison: Sequence[DailyComparison],
+) -> str:
+    valid_count = sum(record.lat is not None and record.lng is not None for record in records)
+    satellite_count = sum(record.source == "satellite" for record in records)
+    cellular_count = sum(record.source == "cellular" for record in records)
+    metrics = (
+        '<section class="metrics" aria-label="FOSSA 資料總覽">'
+        f'<dl class="metric"><dt>訊息數</dt><dd>{len(records):,}</dd></dl>'
+        f'<dl class="metric metric--signal"><dt>暫定有效座標</dt><dd>{valid_count:,}</dd></dl>'
+        f'<dl class="metric"><dt>Satellite</dt><dd>{satellite_count:,}</dd></dl>'
+        f'<dl class="metric"><dt>Cellular</dt><dd>{cellular_count:,}</dd></dl>'
+        "</section>"
+    )
+
+    empty_state = ""
+    if not records:
+        empty_state = (
+            '<div class="panel empty-state"><p><strong>尚未收到 FOSSA 訊息。</strong></p>'
+            '<p>webhook 端點格式：<code>https://fossa-webhook.&lt;subdomain&gt;.workers.dev/fossa/&lt;TOKEN&gt;</code></p></div>'
+        )
+
+    device_rows = []
+    for device in devices:
+        serial = escape(device.serial)
+        if device.serial == "未登錄":
+            serial = f'<span class="warning">{serial}</span>'
+        device_rows.append(
+            (
+                f'<th scope="row" class="mono">{serial}</th>',
+                f'<td class="mono">{escape(device.mac or "待填")}</td>',
+                f'<td class="mono">{escape(device.node_id or "待填")}</td>',
+                f'<td class="mono">{escape(device.last_received_local or "—")}</td>',
+                f'<td class="number">{device.n_messages:,}</td>',
+            )
+        )
+    devices_table = render_table(
+        ("S/N", "MAC", "nodeId", "最後收到時間", "筆數"),
+        device_rows,
+        "FOSSA Nexus 設備統計",
+    )
+    devices_panel = (
+        '<section id="fossa-devices" class="panel"><div class="panel__head"><h3>設備</h3>'
+        '<p>在 <code>data/fossa/devices.json</code> 填入註冊後的 MAC／nodeId；未匹配訊息另列為未登錄。</p></div>'
+        + devices_table
+        + "</section>"
+    )
+
+    recent_rows = []
+    for record in sorted(records, key=fossa_record_order, reverse=True)[:100]:
+        coordinate = '<span class="muted">—</span>'
+        if record.lat is not None and record.lng is not None:
+            osm = (
+                "https://www.openstreetmap.org/"
+                f"?mlat={record.lat:.6f}&mlon={record.lng:.6f}#map=16/{record.lat:.6f}/{record.lng:.6f}"
+            )
+            coordinate = f'<a href="{escape(osm)}" rel="noopener">{record.lat:.6f}, {record.lng:.6f}</a>'
+        recent_rows.append(
+            (
+                f'<th scope="row" class="mono">{escape(record.sat_local or "—")}</th>',
+                f'<td class="mono">{escape(record.queue_local or "—")}</td>',
+                f'<td class="number">{record.latency_s if record.latency_s is not None else "—"}</td>',
+                f'<td class="number">{fmt_number(record.rssi, 0)}</td>',
+                f'<td>{escape(record.source or "—")}</td>',
+                f"<td>{coordinate}</td>",
+                f'<td class="mono payload">{escape(record.payload_hex or "—")}</td>',
+            )
+        )
+    recent_table = render_table(
+        ("Sat 時間", "Queue 時間", "延遲 (s)", "RSSI", "來源", "暫定座標", "Payload hex"),
+        recent_rows,
+        "最近 100 筆 FOSSA Nexus 訊息",
+    )
+    recent_panel = (
+        '<section id="fossa-messages" class="panel"><div class="panel__head"><h3>最近 100 筆訊息</h3>'
+        '<p>座標暫按 little-endian float32：lat@0、lng@4 解碼；正式格式仍待 FOSSA 提供。</p></div>'
+        + recent_table
+        + "</section>"
+    )
+
+    daily_panel = (
+        '<section id="fossa-daily" class="panel chart"><div class="panel__body"><h3>每日訊息</h3>'
+        '<p class="legend"><span><i class="fossa"></i>全部訊息</span>'
+        '<span><i class="fossa-valid"></i>暫定有效座標</span></p>'
+        f'{fossa_daily_chart(comparison)}</div></section>'
+    )
+    fossa_section = (
+        '<section id="fossa-nexus" class="source-section"><div class="panel__head section-head">'
+        '<div><p class="section-kicker">FOSSA NETWORK</p><h2>FOSSA Nexus</h2></div>'
+        '<p>Webhook 接收紀錄、裝置對照與暫定 payload 解碼；'
+        '<span class="nowrap">正式座標格式</span>仍待 FOSSA 確認。</p></div>'
+        + metrics
+        + empty_state
+        + devices_panel
+        + recent_panel
+        + daily_panel
+        + "</section>"
+    )
+
+    comparison_rows = [
+        (
+            f'<th scope="row" class="mono">{escape(item.date)}</th>',
+            f'<td class="number">{item.riot_total:,}</td>',
+            f'<td class="number good">{item.riot_valid:,}</td>',
+            f'<td class="number">{item.fossa_total:,}</td>',
+            f'<td class="number good">{item.fossa_valid:,}</td>',
+        )
+        for item in reversed(comparison)
+    ]
+    comparison_table = render_table(
+        ("日期", "鐳洋收到", "鐳洋 CRC 正確", "FOSSA 收到", "FOSSA 暫定有效"),
+        comparison_rows,
+        "鐳洋與 FOSSA 每日接收對照",
+    )
+    comparison_section = (
+        '<section id="source-comparison" class="source-section"><div class="panel__head section-head">'
+        '<div><p class="section-kicker">CROSS-NETWORK</p><h2>鐳洋 vs FOSSA 對照</h2></div>'
+        '<p>鐳洋有效代表 CRC 正確；FOSSA 有效代表暫定格式'
+        '<span class="nowrap">可解出合理座標</span>，兩者定義不同。</p></div>'
+        '<section id="comparison-table" class="panel">'
+        + comparison_table
+        + '</section><section id="comparison-chart" class="panel chart"><div class="panel__body">'
+        '<h3>每日接收量</h3><p class="legend">'
+        '<span><i></i>鐳洋收到</span><span><i class="ok"></i>鐳洋 CRC 正確</span>'
+        '<span><i class="fossa"></i>FOSSA 收到</span><span><i class="fossa-valid"></i>FOSSA 暫定有效</span>'
+        f'</p>{comparison_chart(comparison)}</div></section></section>'
+    )
+    return fossa_section + comparison_section
 
 
 def render_content(
     passes: Sequence[PassRow],
     packets: Sequence[PacketRow],
     devices: Sequence[DeviceStats],
+    fossa_records: Sequence[FossaRecord],
+    fossa_devices: Sequence[FossaDeviceStats],
+    comparison: Sequence[DailyComparison],
     summary_name: str,
     packets_name: str,
     now: datetime,
@@ -450,7 +790,16 @@ def render_content(
         '<div class="download"><strong><a href="data.json" download>儀表板 JSON</a></strong><code>data.json</code></div>'
         "</div></section>"
     )
-    return metrics + latest_panel + passes_panel + devices_panel + charts + packets_panel + downloads
+    return (
+        metrics
+        + latest_panel
+        + passes_panel
+        + devices_panel
+        + charts
+        + packets_panel
+        + render_fossa_sections(fossa_records, fossa_devices, comparison)
+        + downloads
+    )
 
 
 def prepare_public(files: Sequence[SourceFile], summary: Path, packets: Path) -> None:
@@ -485,12 +834,25 @@ def main() -> None:
     passes = load_passes(summary_path)
     packets = load_packets(packets_path)
     devices = device_statistics(packets)
+    fossa_records = load_records(FOSSA_MESSAGES)
+    fossa_devices = fossa_device_statistics(fossa_records, load_fossa_devices(FOSSA_DEVICES))
+    comparison = daily_comparison(packets, fossa_records)
     prepare_public(source_files, summary_path, packets_path)
 
     coverage = "尚無資料"
     if passes:
         coverage = f"{passes[-1].pass_local} – {passes[0].pass_local}"
-    content = render_content(passes, packets, devices, summary_path.name, packets_path.name, now)
+    content = render_content(
+        passes,
+        packets,
+        devices,
+        fossa_records,
+        fossa_devices,
+        comparison,
+        summary_path.name,
+        packets_path.name,
+        now,
+    )
     template = Template((WEB_DIR / "template.html").read_text(encoding="utf-8"))
     html = template.substitute(
         css=(WEB_DIR / "style.css").read_text(encoding="utf-8"),
@@ -503,12 +865,30 @@ def main() -> None:
         "coverage": coverage,
         "passes": [asdict(item) for item in passes],
         "devices": [asdict(item) for item in devices],
+        "fossa": {
+            "n_messages": len(fossa_records),
+            "n_provisional_valid": sum(
+                record.lat is not None and record.lng is not None for record in fossa_records
+            ),
+            "devices": [asdict(item) for item in fossa_devices],
+            "daily": [
+                {
+                    "date": item.date,
+                    "n_messages": item.fossa_total,
+                    "n_provisional_valid": item.fossa_valid,
+                }
+                for item in comparison
+                if item.fossa_total
+            ],
+        },
+        "daily_comparison": [asdict(item) for item in comparison],
     }
     write_text_atomic(PUBLIC_DIR / "data.json", json.dumps(data, ensure_ascii=False, indent=2) + "\n")
     write_text_atomic(PUBLIC_DIR / "index.html", html)
     print(
         f"dashboard -> {PUBLIC_DIR / 'index.html'} "
-        f"({len(passes)} passes, {len(packets)} packets, {sum(row.crc_ok for row in packets)} CRC ok)"
+        f"({len(passes)} passes, {len(packets)} packets, {sum(row.crc_ok for row in packets)} CRC ok, "
+        f"{len(fossa_records)} FOSSA messages)"
     )
 
 

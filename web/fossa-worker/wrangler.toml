@@ -1,0 +1,7 @@
+name = "fossa-webhook"
+main = "src/index.js"
+compatibility_date = "2026-10-17"
+
+[[kv_namespaces]]
+binding = "FOSSA_KV"
+id = "REPLACE_WITH_FOSSA_KV_NAMESPACE_ID"

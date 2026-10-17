@@ -1,6 +1,6 @@
 # 鐳洋過境資料儀表板
 
-`web/update.sh` 會依序下載鐳洋平台的新過境檔、重算逐場次／逐封包 CSV，再以 Python 3.9+ 標準函式庫產生可離線瀏覽的 `web/public/index.html`。頁面不載入外部 JavaScript、字型或 CDN；OpenStreetMap 只在使用者點座標連結時開啟。
+`web/update.sh` 會依序下載鐳洋平台的新過境檔、重算逐場次／逐封包 CSV，並在已設定 `FOSSA_EXPORT_URL` 時匯出 FOSSA Nexus webhook 訊息，再以 Python 3.9+ 標準函式庫產生可離線瀏覽的 `web/public/index.html`。頁面不載入外部 JavaScript、字型或 CDN；OpenStreetMap 只在使用者點座標連結時開啟。
 
 ## 雲端部署
 
@@ -48,6 +48,64 @@ sh web/deploy/sync_dashboard_repo.sh /Users/laizhendong/Desktop/tasa-riot-dashbo
 ### Actions 額度
 
 每小時一次約 720 次 workflow／月；build 若約 1 分鐘，核心建置約 700–720 分鐘。private repository 的 GitHub Free 每月含 2,000 分鐘。由於 build 與 deploy 是兩個獨立 job，GitHub 會分別計時並按分鐘進位，實際用量可能接近 1,400–1,500 分鐘；可在 Settings → Billing and licensing → Usage 查看實際消耗。
+
+## FOSSA 接入
+
+GitHub Pages／Cloudflare Pages 都是靜態網站，不能直接接收 FOSSA POST。`web/fossa-worker/` 提供一個 Cloudflare Worker：`POST /fossa/<TOKEN>` 接收 webhook 並寫入 KV，`GET /export/<TOKEN>` 供 Actions 匯出。完整指令見 [fossa-worker/README.md](fossa-worker/README.md)。
+
+### 1. 部署 Worker
+
+```sh
+npm install -g wrangler
+cd web/fossa-worker
+wrangler login
+wrangler kv namespace create FOSSA_KV
+# 將輸出的 id 填入 wrangler.toml
+wrangler secret put WEBHOOK_TOKEN
+wrangler deploy
+```
+
+請用至少 32 bytes 的隨機 URL-safe token，且不要 commit。部署後會得到：
+
+```text
+Webhook：https://fossa-webhook.<subdomain>.workers.dev/fossa/<TOKEN>
+Export：https://fossa-webhook.<subdomain>.workers.dev/export/<TOKEN>
+```
+
+### 2. 設定 FOSSA IoT Hub
+
+到 FOSSA IoT Hub → **Register your Device** → **Integration**，填入 Webhook URL 並選 **with metadata**。收到裝置註冊資料後，在 `data/fossa/devices.json` 補上三台 S/N 對應的 `mac`／`nodeId`。
+
+IoT Hub 另有需 Manager 建立 API key 的 REST API，但正式路徑與回應格式尚待 FOSSA 提供。`python3 scripts/fetch_fossa.py --rest` 已保留 `FOSSA_HUB_API_BASE`、`FOSSA_HUB_API_KEY`、`FOSSA_HUB_ENDPOINT`；endpoint 空白時只提示「待 FOSSA 提供 REST 端點」，不會發送請求。
+
+### 3. 設定 GitHub Actions
+
+到 GitHub repository → Settings → Secrets and variables → Actions → Secrets，新增：
+
+```text
+FOSSA_EXPORT_URL=https://fossa-webhook.<subdomain>.workers.dev/export/<TOKEN>
+```
+
+workflow 會把 `data/fossa/messages.jsonl` 放入 Actions cache，建站前增量匯出並去重；該檔已忽略，不會 commit 到主倉或公開鏡像。
+
+### 驗證
+
+先模擬 FOSSA 的 with-metadata POST：
+
+```sh
+curl -fsS -X POST \
+  -H 'Content-Type: application/json' \
+  --data '{"mac":"01504B004800","queue_timestamp":1760091985,"sat_timestamp":1760092185,"rssi":-87,"message":"aGVsbG8gd29ybGQ=","nodeId":"67dd4ee23f647d4b31e0f8c8","source":"satellite"}' \
+  'https://fossa-webhook.<subdomain>.workers.dev/fossa/<TOKEN>'
+```
+
+應回傳 `{"ok":true}`。接著到 Actions 手動執行 **Deploy dashboard**，或使用：
+
+```sh
+gh workflow run dashboard.yml -R <owner>/<repo>
+```
+
+完成後確認頁面有「FOSSA Nexus」與「鐳洋 vs FOSSA 對照」區塊。文件範例的 `hello world` payload 不是座標，會顯示 payload hex，但暫定座標為空，這是預期結果。
 
 ## 部署到 Linux 內部伺服器
 
@@ -107,10 +165,11 @@ python3 -m http.server 8080 --directory web/public
 
 ## 產出內容
 
-- `web/public/index.html`：單檔儀表板，CSS 與兩張 SVG 圖均內嵌。
+- `web/public/index.html`：單檔儀表板，CSS 與所有 SVG 圖均內嵌。
 - `web/public/data.json`：逐場次與各 MAC 統計，供其他程式讀取。
 - `web/public/*_summary.csv`、`*_packets.csv`、`files.json`：本次建站來源資料。
 - `web/public/raw/*.bin`：可由場次表直接下載的原始紀錄副本。
+- `data/fossa/messages.jsonl`：FOSSA 原始 export 歷史，只留在本機／Actions cache，不進 git。
 
 `web/public/` 與 `web/update.log` 都是可重建產物，已加入 `.gitignore`。
 

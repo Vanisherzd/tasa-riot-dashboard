@@ -11,6 +11,7 @@ on:
     paths:
       - "scripts/**"
       - "web/**"
+      - "data/fossa/**"
 
 concurrency:
   group: dashboard-deploy
@@ -19,6 +20,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      FOSSA_EXPORT_URL: ${{ secrets.FOSSA_EXPORT_URL }}
     permissions:
       contents: read
     steps:
@@ -30,6 +33,14 @@ jobs:
         run: python3 scripts/fetch_riot_passes.py --since 2026-10-01
       - name: Summarize RIOT passes
         run: python3 scripts/summarize_riot_passes.py
+      - name: Restore FOSSA message history
+        uses: actions/cache@v4
+        with:
+          path: data/fossa/messages.jsonl
+          key: fossa-messages-v1
+      - name: Fetch FOSSA messages
+        if: env.FOSSA_EXPORT_URL != ''
+        run: python3 scripts/fetch_fossa.py
       - name: Build dashboard
         run: python3 web/build_site.py
       - name: Upload dashboard artifact

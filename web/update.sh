@@ -29,6 +29,9 @@ run_update() {
     printf '[%s] dashboard update started\n' "$(date '+%Y-%m-%d %H:%M:%S %z')"
     run_step "fetch RIOT passes" python3 scripts/fetch_riot_passes.py || return $?
     run_step "summarize RIOT passes" python3 scripts/summarize_riot_passes.py || return $?
+    if [ -n "${FOSSA_EXPORT_URL:-}" ]; then
+        run_step "fetch FOSSA messages" python3 scripts/fetch_fossa.py || return $?
+    fi
     run_step "build dashboard" python3 web/build_site.py || return $?
     printf '\n[%s] dashboard update completed\n' "$(date '+%Y-%m-%d %H:%M:%S %z')"
 }
