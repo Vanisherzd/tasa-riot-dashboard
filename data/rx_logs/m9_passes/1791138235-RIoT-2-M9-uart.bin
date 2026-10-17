@@ -1,0 +1,197 @@
+
+
+RFEB_SYS V5.08
+SN:RFeBp5-250005 Activate Success!
+[EEP0]:No FMod
+Start..
+GPS:
+PFB 2 0
+FPGA APON M[2]B[0]
+>metal: debug:     registered generic bus
+registering: 0, name=ff310000.ipi
+registering: 1, name=41900000.shm
+
+
+Model     	: CommPL_8U R5_app
+FW Ver   	: 25110304
+App Ver   	: V1.0.0.20251105.101639
+I2C[1]-Mux1-EEPROM [0x50]: 
+ => Check Pass !
+I2C[0]-EEPROM_FMC [0x50]: 
+ => Check Pass !
+>spi 8a34043 jtag id [0x064D]
+spi 8a34043 product id [0x4043]
+spi 8a34043 HW Rev  [0x03]
+ LMX04832 reset and initial done !
+  [SPI_SEL_LMX2594_ALL]: output 4915.20 MHz config 
+[LMX2594_alive_wr][222] SEL_ID[0], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LM [    1.304827] cryptd: max_cpu_qle[    4.675118] Freeing initrd memorS[u[7[r[999;999H[6nroot@RFSOC:~# cd /run/media/mmcblk0p2
+root@RFSOC:/run/media/mmcblk0p2# 
+root@RFSOC:/run/media/mmcblk0p2# ./linux_app_a_spi2_2obc_v2.elf
+[INFO] socat started: socat -u - /dev/ttyUL1,raw,echo=0,b115200,cs8,parenb=0,cstopb=0
+Opening SPI communication interface
+Note: chip version is 0x10 (v1.0)
+CAL FW VERSION: 1
+CAL: started
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:-1 phi:14
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:-2 phi:14
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:0 phi:14
+-------------------------------------------------------------------
+Radio calibration completed:
+  RadioA: amp:-1 phi:14
+  RadioB: amp:0 phi:0
+  TX calibration params for rf_chain 0:
+  -- power:14	dac:3	mix:10	offset_i:0	offset_q:-94
+  INFO: using legacy timestamp
+AGC: setting fdd_mode to 0
+ARB: dual demodulation disabled for all SF
+LoRa RX started.
+
+Received 1 packet(s):
+  RSSI: -109.4 dBm, SNR: -19.0 dB, Size: 14
+  Payload: 00 5B A9 FB F5 11 81 89 69 EA 37 53 6C 4A 
+
+Received 1 packet(s):
+  RSSI: -110.4 dBm, SNR: -20.5 dB, Size: 23
+  Payload: 00 01 00 00 00 00 00 00 00 23 00 20 12 00 D5 B3 70 60 31 14 C3 5D 42 
+
+Received 1 packet(s):
+  RSSI: -112.4 dBm, SNR: -17.5 dB, Size: 19
+  Payload: CC 00 00 05 0E C2 2E 1F 48 29 20 9B 6A C2 3F E5 00 27 72 
+
+Received 1 packet(s):
+  RSSI: -112.4 dBm, SNR: -10.2 dB, Size: 10
+  Payload: 80 79 0B 04 00 00 00 02 71 61 
+
+Received 1 packet(s):
+  RSSI: -112.4 dBm, SNR: -8.8 dB, Size: 10
+  Payload: 80 79 0D 04 00 00 00 02 71 07 
+
+Received 1 packet(s):
+  RSSI: -106.4 dBm, SNR: -9.2 dB, Size: 10
+  Payload: 80 79 11 04 00 00 00 02 73 5B 
+
+Received 1 packet(s):
+  RSSI: -106.4 dBm, SNR: -10.0 dB, Size: 10
+  Payload: 80 79 01 01 00 00 60 05 FC 09 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -10.0 dB, Size: 10
+  Payload: 80 79 0D 04 00 00 00 02 71 07 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -15.2 dB, Size: 19
+  Payload: CC 00 00 05 0E C2 33 22 48 29 21 06 6A C2 6A 15 00 26 33 
+
+Received 1 packet(s):
+  RSSI: -106.4 dBm, SNR: -9.0 dB, Size: 10
+  Payload: 80 73 10 0E 00 00 00 02 72 8C 
+
+Received 1 packet(s):
+  RSSI: -106.4 dBm, SNR: -11.0 dB, Size: 9
+  Payload: 00 79 04 53 57 45 10 D7 4B 
+
+Received 1 packet(s):
+  RSSI: -108.4 dBm, SNR: -9.0 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -108.4 dBm, SNR: -9.0 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -107.4 dBm, SNR: -9.2 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -109.4 dBm, SNR: -10.0 dB, Size: 9
+  Payload: AA 79 AE 09 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -109.4 dBm, SNR: -9.2 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -109.4 dBm, SNR: -7.8 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -109.4 dBm, SNR: -9.2 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -112.4 dBm, SNR: -9.5 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -112.4 dBm, SNR: -9.5 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -111.4 dBm, SNR: -9.0 dB, Size: 56
+  Payload: 41 4C 02 02 7A 0E 04 DE 00 00 01 A1 08 31 04 C8 CF D1 D3 D5 DD DF E3 E5 77 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 E5 
+
+Received 1 packet(s):
+  RSSI: -113.4 dBm, SNR: -10.2 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -112.4 dBm, SNR: -8.5 dB, Size: 56
+  Payload: 41 4C 02 02 7A 0E 04 DE 00 00 01 A1 08 31 10 FD CF D1 D3 D5 DD DF E3 E5 97 00 00 00 00 00 00 00 01 00 00 00 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 57 
+
+Received 1 packet(s):
+  RSSI: -111.4 dBm, SNR: -8.8 dB, Size: 56
+  Payload: 41 4C 02 02 7A 0E 04 DE 00 00 01 A1 08 31 29 68 CF D1 D3 D5 DD DF E3 E5 37 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 6A 
+
+Received 1 packet(s):
+  RSSI: -113.4 dBm, SNR: -8.8 dB, Size: 56
+  Payload: 41 4C 02 02 C9 39 05 E9 00 00 01 A1 08 31 6A 12 CF D1 D3 D5 DD DF E3 E5 17 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 30 00 00 00 00 00 00 00 00 00 BC 
+
+Received 1 packet(s):
+  RSSI: -114.4 dBm, SNR: -10.8 dB, Size: 9
+  Payload: 02 1F 24 05 8A 08 95 D2 4B 
+
+Received 1 packet(s):
+  RSSI: -113.4 dBm, SNR: -9.8 dB, Size: 56
+  Payload: 41 4C 02 02 C9 19 00 E1 00 80 01 A1 08 31 76 4E C9 D7 D3 D5 DD EF E3 E5 B7 CC C0 08 20 20 02 00 CA 00 00 00 00 04 50 00 00 00 01 00 00 00 04 00 04 0C 00 00 32 33 03 27 
+
+Received 1 packet(s):
+  RSSI: -113.4 dBm, SNR: -9.8 dB, Size: 56
+  Payload: 41 4C 02 02 C9 39 05 E9 00 00 01 A1 08 31 82 7D CF D1 D3 D5 DD DF E3 E5 57 00 00 00 00 60 00 00 00 00 00 00 10 00 00 00 00 00 00 C0 C0 90 09 90 C0 00 00 00 00 00 00 8E 
+
+Received 1 packet(s):
+  RSSI: -111.4 dBm, SNR: -10.2 dB, Size: 56
+  Payload: 41 4C 02 02 C9 39 05 E9 00 00 01 A5 0C 71 8E B2 CF D1 D3 D5 DD DF 85 85 D1 00 06 66 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 02 00 00 00 00 02 00 04 04 00 00 DF 
+
+Received 1 packet(s):
+  RSSI: -113.4 dBm, SNR: -9.2 dB, Size: 56
+  Payload: 41 4C 02 02 7A 0E 04 DE 00 00 01 A1 08 31 97 44 CF D1 D3 D5 DD DF E3 E5 17 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 94 
+[  554.643842] Internal error: synchronous external abort: 96000210 [#1] SMP
+[  554.650633] Modules linked in: uio_pdrv_genirq
+[  554.655067] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 5.15.36-xilinx-v2022.2 #1
+[  554.662365] Hardware name: ZynqMP ZCU111 RevA (DT)
+[  554.667140] pstate: 000000c5 (nzcv daIF -PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+[  554.674092] pc : uartlite_inle32+0x4/0x20
+[  554.678094] lr : ulite_isr+0xb0/0x28c
+[  554.681748] sp : ffff800008003e60
+[  554.685046] x29: ffff800008003e60 x28: ffff8000094d7758 x27: 0000000000000001
+[  554.692173] x26: ffff8000094d12x19 0000000000015 18: 0000000000000
+[  54.7355] x1 
+
+>-----------------------------------
+>PF0
+FPGA Auto POFF
+>RF1V5[0]
+>RF3V0[0]
+>RF5V0[0]
+>FPGA_PON[0]
+>
+
+>-----------------------------------
+>GPS:

@@ -1,0 +1,5 @@
+web/public/
+*.log
+web/.update.lock
+web/.update.lockdir/
+.DS_Store

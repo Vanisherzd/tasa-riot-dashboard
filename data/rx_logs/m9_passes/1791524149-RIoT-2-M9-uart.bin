@@ -1,0 +1,215 @@
+
+
+RFEB_SYS V5.08
+SN:RFeBp5-250005 Activate Success!
+[EEP0]:No FMod
+Start..
+>GPS:
+PFB 2 0
+FPGA APON M[2]B[0]
+>metal: debug:     registered generic bus
+registering: 0, name=ff310000.ipi
+registering: 1, name=41900000.shm
+
+
+Model     	: CommPL_8U R5_app
+FW Ver   	: 25110304
+App Ver   	: V1.0.0.20251105.101639
+I2C[1]-Mux1-EEPROM [0x50]: 
+ => Check Pass !
+I2C[0]-EEPROM_FMC [0x50]: 
+ => Check Pass !
+>spi 8a34043 jtag id [0x064D]
+spi 8a34043 product id [0x4043]
+spi 8a34043 HW Rev  [0x03]
+ LMX04832 reset and initial done !
+  [SPI_SEL_LMX2594_ALL]: output 4915.20 MHz config 
+[LMX2594_alive_wr][222] SEL_ID[0], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LMX2594_0]: pass-Lock
+[LMX2594_alive_wr][222] SEL_ID[1], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LMX2594_1]: pass-Lock
+[LMX2594_alive_wr][222] SEL_ID[2], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LMX2594_2]: pass-Lock
+RFDC_init Pass
+-----------------------------------------------
+ADC PowerUp St q[2
+ Mixe Freueny: 1312000MHz
+ : Mde[f] TxSl[0]RxSel[] L[0LMX2820 Mod: [0][0]
+LMX2820_RF1 Init: 
+............
+LMX2820_RF1 Locked
+LMX2820_RF2 Init: 
+............
+LMX2820_RF2 Locked
+RF3:[Rx][LO:10700MHz] RF4:[Tx][LO:8450MHz]
+Start Loop Back Test[0]
+.........Done........
+>switch OBC uart Rx connect to PSU_uart1
+˜00--0x0000000042000000) overlaps with rproc@40000000 (0x0000000040000000--0x0000000042000000)
+[    0.000000] Zone ranges:
+[    0.000000]   DMA32    [mem 0x0000000000000000-0x00000000ffffffff]
+[    0.000000]   Normal   [mem 0x0000000100000000-0x000000087fffffff]
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000000000000-0x000000003fffffff]
+[    0.000000]   node   0: [mem 0x0000000040000000-0x0000000041ffffff]
+[    0.000000]   node   0: [mem 0x0000000042000000-0x000000007fefffff]
+[    0.000000]   node   0: [mem 0x[tho fro DT.[    .00000] psi0Inde-cace hah tabl enries: 22144(order 9, 09715 byte, linar)
+    .000[    0.000000] Memory: 3687532K/4193280K available (13888K kernel code, ted vaue o schedlerenlistmnt dlay is25 jffies.
+[mn 30n, wrps evey 21902325543n
+[   0.003s001[0x410d034
+[   0.05153] Dtectd VIPT -cahe on CU2[    0.5717] CPU2 . has tabl entres: 124 (oder: , 6536 byts, lnear)[    0.141453] pinctrl:B pge siated 0 ag2882] Hugegiter 640 KiBae siz, reallocae page
+[    1.304820] cryptd: max_cpu_qlen set to 1000
+[    1.328678] DRBG: Continuing without Jitter RNG
+[    1.432347] raid6: neonx8   gen()  2126 MB/s
+[    1.500400] raid6: neonx8   xor()  1585 MB/s
+[    1.568467] raid6: neonx4   gen()  2167 MB/s
+[    1.636520] raid6: neonx4   xor()  1550 MB/s
+[    1.704594] raid6: neonx2   gen()  2065 MB/s
+[    1.772642] raid6: neonx2   xor()  1427 MB/s
+[    1.840710] raid6: neonx1   gen()  1761 MB/s
+[    1.908772] raid6: neonx1   xor()  1212 MB/s
+[    1.976835] raid6: int64x8  gen()  1358 MB/s
+[    2.044902] raid6: int64x8  xor()   773 MB/s
+[    2.112966] raid6: int64x4  gen()  1597 MB/s
+[    2.181025] raid6: int64x4  xor()   854 MB/s
+[    2.249092] raid6: int64x2  gen()  1397 MB/s
+[    2.317148] raid6: int64x2  xor()   747 MB/s
+[    2.385216] raid6: int64x1  gen()  1032 MB/s
+[    2.453273] raid6: int64x1  xor()   517 MB/s
+[    2.453312] raid6: using algorithm neonx4 gen() 2167 MB/s
+[    2.457283] raid6: .... xor() 1550 MB/s, rmw enabled
+[    2.462231] raid6: using neon recovery algorithm
+[    2.467352] iommu: Default domain type: Translated 
+[    2.471698] iommu: DMA domain TLB invalidation policy: strict mode 
+[    2.478167] SCSI subsystem initialized
+[    2.481807] usbcore: registered new interface driver usbfs
+[    2.487175] usbcore: registered new interface driver hub
+[    2.492457] usbcore: registered new device6 - opyight 2052007 odolo Gomett <iomettiliux.it
+[   2521263dh_ss_conte
+[   2.82395 VFS Dis qutas quot6.6.0
+[   2.56tshtable ntris: 204 (oder: 4,6556 bytes liear)
+[   .L[    4.673962] Freeing initrd memory: 42444K
+[    4.731112] Initialise system trusted keyrings
+[    4.731245] workingset: timestamp_bits=46 max_order=20 bucket_order=0
+[    4.737120] NFS: Registering the id_resolver key type
+[    4.741456] Key type id_resolver registered
+[    4.745548] Key type id_legacy registered
+[    4.749554] nfs4filelayout_init: NFSv4 File Layout Driver Registering...
+[    4.756222] nfs4flexfilelayout_init: NFSv4 Flexfile Layout Driver Registering...
+[    4.763613] jffs2: version 2.2. (NAND) (SUMMARY)  Â© 2001-2006 Red Ha[7[r[999;999H[6nroot@RFSOC:~# cd /run/media/mmcblk0p2
+root@RFSOC:/run/media/mmcblk0p2# 
+root@RFSOC:/run/media/mmcblk0p2# ./linux_app_a_spi2_2obc_v2.elf
+[INFO] socat started: socat -u - /dev/ttyUL1,raw,echo=0,b115200,cs8,parenb=0,cstopb=0
+Opening SPI communication interface
+Note: chip version is 0x10 (v1.0)
+CAL FW VERSION: 1
+CAL: started
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:0 phi:14
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:-1 phi:14
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:-1 phi:14
+-------------------------------------------------------------------
+Radio calibration completed:
+  RadioA: amp:-1 phi:14
+  RadioB: amp:0 phi:0
+  TX calibration params for rf_chain 0:
+  -- power:14	dac:3	mix:10	offset_i:0	offset_q:-94
+ -INFO: using legacy timestamp
+AGC: setting fdd_mode to 0
+ARB: dual demodulation disabled for all SF
+LoRa RX started.
+
+Received 1 packet(s):
+  RSSI: -116.4 dBm, SNR: -9.8 dB, Size: 10
+  Payload: 80 79 0E 04 00 00 00 02 71 34 
+
+Received 1 packet(s):
+  RSSI: -115.4 dBm, SNR: -8.2 dB, Size: 10
+  Payload: 80 79 01 01 00 00 00 05 FC 09 
+
+Received 1 packet(s):
+  RSSI: -116.4 dBm, SNR: -8.2 dB, Size: 10
+  Payload: 80 79 08 03 00 7D 00 04 D4 88 
+
+Received 2 packet(s):
+  RSSI: -115.4 dBm, SNR: -8.2 dB, Size: 10
+  Payload: 80 79 06 04 00 00 00 03 B1 BC 
+  RSSI: -114.4 dBm, SNR: -8.8 dB, Size: 13
+  Payload: 80 79 06 04 06 17 70 0C CB 23 87 2F B3 
+
+Received 1 packet(s):
+  RSSI: -113.4 dBm, SNR: -10.0 dB, Size: 10
+  Payload: 80 79 0A 04 00 00 00 02 70 B0 
+
+Received 1 packet(s):
+  RSSI: -116.4 dBm, SNR: -7.8 dB, Size: 10
+  Payload: 80 79 0B 04 00 00 00 02 71 61 
+
+Received 1 packet(s):
+  RSSI: -120.4 dBm, SNR: -9.8 dB, Size: 10
+  Payload: 80 79 0C 04 0A 2A 0A 02 70 D6 
+
+Received 1 packet(s):
+  RSSI: -120.4 dBm, SNR: -9.5 dB, Size: 10
+  Payload: 80 79 0D 04 00 00 00 02 71 07 
+
+Received 1 packet(s):
+  RSSI: -120.4 dBm, SNR: -7.8 dB, Size: 10
+  Payload: 80 79 11 04 00 00 00 02 73 5B 
+
+Received 1 packet(s):
+  RSSI: -121.4 dBm, SNR: -8.8 dB, Size: 10
+  Payload: 80 79 01 01 00 00 00 05 FC 09 
+
+Received 1 packet(s):
+  RSSI: -116.4 dBm, SNR: -10.5 dB, Size: 10
+  Payload: 84 7D 0D 04 00 00 00 02 71 07 
+
+Received 1 packet(s):
+  RSSI: -106.4 dBm, SNR: -20.5 dB, Size: 23
+  Payload: 00 03 30 03 06 1A 00 00 03 36 C0 20 12 60 D6 B1 70 6A 0D 87 91 81 A4 
+
+Received 1 packet(s):
+  RSSI: -106.4 dBm, SNR: -20.2 dB, Size: 23
+  Payload: 00 01 05 00 55 00 00 00 00 FD 03 11 82 88 55 BB 70 96 8D 92 01 60 7B 
+
+Received 1 packet(s):
+  RSSI: -107.4 dBm, SNR: -19.2 dB, Size: 7
+  Payload: 21 F8 02 51 05 D7 AB 
+
+Received 1 packet(s):
+  RSSI: -108.4 dBm, SNR: -18.5 dB, Size: 7
+  Payload: 21 F8 02 51 05 D7 8B 
+
+Received 1 packet(s):
+  RSSI: -109.4 dBm, SNR: -20.2 dB, Size: 7
+  Payload: 21 F8 02 51 35 D7 8B 
+
+Received 1 packet(s):
+  RSSI: -107.4 dBm, SNR: -20.5 dB, Size: 7
+  Payload: 23 01 07 D8 00 D5 78 
+
+Received 1 packet(s):
+  RSSI: -106.4 dBm, SNR: -22.2 dB, Size: 23
+  Payload: 00 01 C0 08 C8 00 5C 04 00 23 00 20 B2 AC 5C 77 EC BF 54 90 2C 03 D7 
+PF0
+
+
+
+>-----------------------------------
+>PF0
+FPGA Auto POFF
+>RF1V5[0]
+>RF3V0[0]
+>RF5V0[0]
+>FPGA_PON[0]
+>
+
+>-----------------------------------
+>GPS:

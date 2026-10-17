@@ -1,0 +1,87 @@
+name: Deploy dashboard
+
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - dev
+    paths:
+      - "scripts/**"
+      - "web/**"
+
+concurrency:
+  group: dashboard-deploy
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Fetch all RIOT passes
+        run: python3 scripts/fetch_riot_passes.py --since 2026-10-01
+      - name: Summarize RIOT passes
+        run: python3 scripts/summarize_riot_passes.py
+      - name: Build dashboard
+        run: python3 web/build_site.py
+      - name: Upload dashboard artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-public
+          path: web/public
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy-cloudflare:
+    needs: build
+    if: vars.DASHBOARD_TARGET == 'cloudflare'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Download dashboard artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dashboard-public
+          path: web/public
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy web/public --project-name ${{ vars.CF_PAGES_PROJECT }}
+
+  deploy-github-pages:
+    needs: build
+    if: vars.DASHBOARD_TARGET == 'github-pages'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download dashboard artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dashboard-public
+          path: web/public
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/public
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="鐳洋 M9 衛星過境場次、封包與設備遙測統計">
+  <meta name="color-scheme" content="light dark">
+  <title>鐳洋過境資料儀表板</title>
+  <style>$css</style>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳至主要內容</a>
+  <header class="hero">
+    <div class="hero__orbit" aria-hidden="true"></div>
+    <div class="shell hero__inner">
+      <p class="eyebrow">TASA · RIOT-2 M9 TELEMETRY</p>
+      <h1>鐳洋過境<br>資料儀表板</h1>
+      <p class="hero__lead">自動彙整衛星過境原始紀錄、封包品質與已知設備遙測。</p>
+      <dl class="update-meta">
+        <div><dt>資料更新</dt><dd>$generated_at</dd></div>
+        <div><dt>涵蓋區間</dt><dd>$coverage</dd></div>
+      </dl>
+    </div>
+  </header>
+  <main id="main" class="shell stack">
+    $content
+  </main>
+  <footer class="shell footer">
+    <p>內部研究資料 · 時間均為 UTC+8 · 原始封包以 CRC-8 poly 0x31 驗證</p>
+  </footer>
+</body>
+</html>

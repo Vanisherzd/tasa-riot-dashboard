@@ -1,0 +1,181 @@
+
+
+RFEB_SYS V5.08
+SN:RFeBp5-250005 Activate Success!
+[EEP0]:No FMod
+Start..
+>GPS:
+PFB 2 0
+FPGA APON M[2]B[0]
+>metal: debug:     registered generic bus
+registering: 0, name=ff310000.ipi
+registering: 1, name=41900000.shm
+
+
+Model     	: CommPL_8U R5_app
+FW Ver   	: 25110304
+App Ver   	: V1.0.0.20251105.101639
+I2C[1]-Mux1-EEPROM [0x50]: 
+ => Check Pass !
+I2C[0]-EEPROM_FMC [0x50]: 
+ => Check Pass !
+>spi 8a34043 jtag id [0x064D]
+spi 8a34043 product id [0x4043]
+spi 8a34043 HW Rev  [0x03]
+ LMX04832 reset and initial done !
+  [SPI_SEL_LMX2594_ALL]: output 4915.20 MHz config 
+[LMX2594_alive_wr][222] SEL_ID[0], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LM[    1.304788] cryptd: max_cpu_qlen[a)
+[   2.Lte has t: 248 (or byts, [[0[[0;32m  OK  [0m] Finished [[[0;32m  OK  [0m] Started [0;1;39mNetwork Configuration[0m.
+[    9.038198] macb ff0e0000.ethernet eth0: PHY [ff0e0000.ethernet-ffffffff:00] driver [Marvell 88E1510] (irq=POLL)
+[  .08981] mab ff0e000ethernt: gm[[0;32m  OK  [0m] Started [0;1;39mNetwork Time Synchronization[0m.
+[    9.478911] random: crng init done
+[    9.482336] random: 7 urandom warning(s) missed due to ratelimiting
+[[0;32m  OK  [0m] Finished [0;1;39mLoad/Save Random Seed[0m.
+[[0;32m  OK  [0m] Created slice [0;1;39mSlice /system/systemd-fsck[0m.
+[[0;32m  OK  [0m] Reached target [0;1;39mSystem Time Set[0m.
+[[0;32m  OK  [0m] Listening on [0;1;39mLoad/Save RF …itch Status /dev/rfkill Watch[0m.
+         Starting [0;1;39mFile System Check on /dev/mmcblk0p1[0m...
+         Starting [0;1;39mFile System Check on /dev/mmcblk0p2[0m...
+         Starting [0;1;39mFile System Check on /dev/mmcblk1p1[0m...
+         Starting [0;1;39mNetwork Name Resolution[0m...
+         Starting [0;1;39mUpdate is Completed[0m...
+[[0;32m  OK  [0m] Finished [0;1;39mFile System Check on /dev/mmcblk0p1[0m.
+[[0;32m  OK  [0m] Finished [0;1;39mFile System Check on /dev/mmcblk0p2[0m.
+[[0;32m  OK  [0m] Finished [0;1;39mFile System Check on /dev/mmcblk1p1[0m.
+[[0;32m  OK  [[[0;32m  OK  [0m] Reached target [0;1;39mSystem Initialization[0m.[[[0;32m  OK  [0m] Listening on [0;1;39mdropbear.socket[0m.
+[[0;3[         Mounting [0;1;9m/runmedi/mmcbk0p10m...
+        t[[0;32m  OK  [0m] Started [0;1;39mSystem Logging Se[[[0;32m  OK  [0m] Started [0;1;39mlora-init[0m.
+[   10.475834] FAT-fs (mmc[nd erver0m..
+         Starting [0;1;39mResets System Activity Logs[0m...
+  m.
+[[0;32m  OK  [0m] Mounted [0;1;39m/run/media/mmcblk0p1[0m.
+[[0;32m  Om[[0;32m  OK  [0m] Finished [0;1;39mResets System Activity Logs[0m.
+[[0;32m  OK  [0m] Reached target [0;1;39mNetwork[0m.
+[[0;32m  OK  [0m]  m OK [0] Strted 0;;39mNS sttusmonitr or NFSv/3lockig.0         Starting [0;1;39mPermit User Sessions[0m...
+         Starting [0;1;39mTarget Communication Framework ag[rt [0;;39mLB: ernel FSserve suport[0m.Se[[[0;32m  OK  [0m] Started [0;1;39mUser Login Management[0m[[[0; [[0;32m  OK  [0m] Finished [0;1;39mRecord Runlevel Change in[   11.228200] audit: type=1006 audit(1637342373.223:2): pid=676 uid=0 old-auid=4294967295 auid=0 tty=(none) old-ses=4294967295 ses=1 res=1
+[   11.240555] audit: type=1300 audit(1637342373.223:2): arch=c00000b7 syscall=64 success=yes exit=1 a0=8 a1=ffffe523ef10 a2=1 a3=ffffbe4d46b0 items=0 ppid=1 pid=676 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=(none) ses=1 comm="(systemd)" exe="/lib/systemd/systemd" key=(null)
+[   11.266839] audit: type=1327 audit(1637342373.223:2): proctitle="(systemd)"
+[   11.364457] lora-init[645]: Searching in /run/media/mmcblk0p1 ...
+[   11.366982] lora-init[645]: No sha256list files found in /run/media/mmcblk0p1
+[   11.369545] lora-init[645]: Searching in /run/media/mmcblk1p1 ...
+[   11.374668] lora-init[645]: No sha256list files found in /run/media/mmcblk1p1
+[   11.374958] lora-init[645]: No valid sha256 list found or no ELF executed in any storage.
+7[r[999;999H[6nroot@RFSOC:~# cd /run/media/mmcblk0p2
+root@RFSOC:/run/media/mmcblk0p2# 
+root@RFSOC:/run/media/mmcblk0p2# ./linux_app_a_spi2_2obc_v2.elf
+[INFO] socat started: socat -u - /dev/ttyUL1,raw,echo=0,b115200,cs8,parenb=0,cstopb=0
+Opening SPI communication interface
+Note: chip version is 0x10 (v1.0)
+CAL FW VERSION: 1
+CAL: started
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:0 phi:14
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:-2 phi:14
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:-1 phi:14
+-------------------------------------------------------------------
+Radio calibration completed:
+  RadioA: amp:0 phi:14
+  RadioB: amp:0 phi:0
+  TX calibration params for rf_chain 0:
+  -- power:14	dac:3	mix:10	offset_i:0	offset_q:-94
+  INFO: using legacy timestamp
+AGC: setting fdd_mode to 0
+ARB: dual demodulation disabled for all SF
+LoRa RX started.
+
+Received 1 packet(s):
+  RSSI: -109.4 dBm, SNR: -14.2 dB, Size: 23
+  Payload: 00 01 00 00 00 00 00 00 00 23 00 20 12 00 D5 B3 70 25 24 F9 58 C2 70 
+
+Received 1 packet(s):
+  RSSI: -109.4 dBm, SNR: -19.8 dB, Size: 23
+  Payload: 00 01 00 00 00 00 00 00 00 23 00 20 12 00 D5 B3 70 B5 B4 F6 89 08 4A 
+
+Received 1 packet(s):
+  RSSI: -109.4 dBm, SNR: -22.5 dB, Size: 23
+  Payload: 00 01 A0 88 00 A8 0A 08 00 29 00 20 12 00 D5 B3 70 2B 6A 23 16 B1 D4 
+
+Received 1 packet(s):
+  RSSI: -109.4 dBm, SNR: -21.8 dB, Size: 23
+  Payload: 00 01 33 01 33 01 03 66 66 1D 65 B1 A2 AA DF B3 70 BA B5 4B D4 4D CD 
+
+Received 1 packet(s):
+  RSSI: -117.4 dBm, SNR: -20.0 dB, Size: 23
+  Payload: 00 01 03 06 30 63 03 66 06 B0 60 11 02 00 D5 B3 70 3A AB 0A A5 42 D8 
+
+Received 1 packet(s):
+  RSSI: -117.4 dBm, SNR: -21.5 dB, Size: 23
+  Payload: 00 01 00 00 00 00 00 00 00 29 00 20 12 00 D5 B3 70 9A D2 79 46 A3 F6 
+
+Received 1 packet(s):
+  RSSI: -117.4 dBm, SNR: -17.8 dB, Size: 47
+  Payload: 40 24 E0 00 FC 00 15 03 02 9A 65 2B A3 12 D4 C5 09 20 FA 08 9B 76 98 7B 0B FF B5 01 92 4C 72 5C 72 1B 16 AB 23 2D 4C 49 0F F4 5C DC 5C 9E 84 
+
+Received 1 packet(s):
+  RSSI: -116.4 dBm, SNR: -20.0 dB, Size: 23
+  Payload: 00 01 00 00 00 00 00 00 00 B6 00 11 02 00 D5 E3 75 C7 CA 6C 76 4C E2 
+
+Received 1 packet(s):
+  RSSI: -116.4 dBm, SNR: -21.8 dB, Size: 23
+  Payload: 00 01 00 02 20 22 02 00 00 24 00 20 12 00 D5 B3 70 AA 6B B8 1D BA B3 
+
+Received 1 packet(s):
+  RSSI: -115.4 dBm, SNR: -22.8 dB, Size: 23
+  Payload: 00 01 00 00 00 00 00 00 00 24 00 20 32 00 D5 B1 72 D5 AB BD 2D F9 47 
+
+Received 1 packet(s):
+  RSSI: -108.4 dBm, SNR: -11.2 dB, Size: 10
+  Payload: A0 59 2D 04 00 00 00 02 71 9E 
+
+Received 1 packet(s):
+  RSSI: -109.4 dBm, SNR: -9.8 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -110.4 dBm, SNR: -9.5 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -110.4 dBm, SNR: -11.0 dB, Size: 10
+  Payload: 80 79 11 04 00 00 00 06 73 1F 
+
+Received 1 packet(s):
+  RSSI: -113.4 dBm, SNR: -10.2 dB, Size: 10
+  Payload: E0 1F 0E 03 40 31 04 06 95 4A 
+
+Received 1 packet(s):
+  RSSI: -113.4 dBm, SNR: -11.0 dB, Size: 10
+  Payload: 80 79 08 03 00 74 00 07 D4 88 
+
+Received 1 packet(s):
+  RSSI: -113.4 dBm, SNR: -10.8 dB, Size: 10
+  Payload: 91 2D 1A 31 53 06 CC 62 76 D0 
+
+Received 1 packet(s):
+  RSSI: -114.4 dBm, SNR: -10.5 dB, Size: 9
+  Payload: 00 75 C4 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -114.4 dBm, SNR: -10.5 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 DC 43 
+PF0
+
+
+
+>-----------------------------------
+>PF0
+FPGA Auto POFF
+>RF1V5[0]
+>RF3V0[0]
+>RF5V0[0]
+>FPGA_PON[0]
+>
+
+>-----------------------------------
+>GPS:

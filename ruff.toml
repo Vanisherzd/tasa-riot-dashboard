@@ -1,0 +1,8 @@
+# 固定 lint 規則，CI 與本機結果一致
+line-length = 120
+target-version = "py311"
+
+[lint]
+select = ["E4", "E7", "E9", "F", "SIM", "RUF", "EXE"]
+# 中文註解、docstring 用全形標點是正常的
+ignore = ["RUF001", "RUF002", "RUF003"]

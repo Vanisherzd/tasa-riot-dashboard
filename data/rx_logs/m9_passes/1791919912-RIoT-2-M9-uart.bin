@@ -1,0 +1,133 @@
+
+
+RFEB_SYS V5.08
+SN:RFeBp5-250005 Activate Success!
+[EEP0]:No FMod
+Start..
+>GPS:
+PFB 2 0
+FPGA APON M[2]B[0]
+>metal: debug:     registered generic bus
+registering: 0, name=ff310000.ipi
+registering: 1, name=41900000.shm
+
+
+Model     	: CommPL_8U R5_app
+FW Ver   	: 25110304
+App Ver   	: V1.0.0.20251105.101639
+I2C[1]-Mux1-EEPROM [0x50]: 
+ => Check Pass !
+I2C[0]-EEPROM_FMC [0x50]: 
+ => Check Pass !
+>spi 8a34043 jtag id [0x064D]
+spi 8a34043 product id [0x4043]
+spi 8a34043 HW Rev  [0x03]
+ LMX04832 reset and initial done !
+  [SPI_SEL_LMX2594_ALL]: output 4915.20 MHz config 
+[LMX2594_alive_wr][222] SEL_ID[0], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LMX2594_0]: pass-Lock
+[LMX2594_alive_wr][222] SEL_ID[1], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LMX2594_1]: pass-Lock
+[LMX2594_alive_wr][222] SEL_ID[2], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LMX2594_2]: pass-Lock
+RFDC_init Pass
+-----------------------------------------------
+ADC PowerUp Steuenc: 135.200MHz  NCO requncy: DKu2]: Mde[ff] Txel[] RxSel0LMX2820 Mod: [0][0]
+LMX2820_RF1 Init: 
+............
+LMX2820_RF1 Locked
+LMX2820_RF2 Init: 
+............
+LMX2820_RF2 Locked
+RF3:[Rx][LO:10700MHz] RF4:[Tx][LO:8450MHz]
+Start Loop Back Test[0]
+.........Done........
+>switch OBC uart Rx connect to PSU_uart1
+‚jj‚Â‚‚‚‚‚‚‚¢’‚‚‚‚‚‚JzÙ•É±…ÁÍº¥Ñ¡’ÁÉ½‚‚‚‚‚‚‚B‚Â‚‚‚‚‚‚‚¢‚‚‚‚‚‚‚jj‚Â‚‚‚‚‚‚‚¢’‚‚‚‚‚‚Jj
+[    0.000000] Zone ranges:
+[    0.000000]   DMA32    [mem 0x0000000000000000-0x00000000ffffffff]
+[    0.000000]   Normal   [mem 0x0000000100000000-0x000000087fffffff]
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000000000000-0x000000003fffffff]
+[    0.000000]   node   0: [mem 0x0000000040000000-0x0000000041ffffff]
+[    0.000000]   node   0: [mem 0x0000000042000000-0x000000007fefffff]
+[    0.000000]   node   0: [mem 0x0000000800000000-0x000000087ff[    0.000000] On node 0, zone Normal: 256 pages in unavailable rangesv 1 oneliss, obilitygrouing on  Toal pags: 131940[   0.00000] Krnel cm[[    0.000000] Memory: 3687532K/4193280K availablK rdata,3920Krodat, 2176 int, 573 bss 24tytescalld fromstar_kerne+0x44/0x6d wit crng_nit=
+[   0.00000] ach_tmerl 0.03601 rcu: ierachicalSRCUimplemntaton.
+[   0047562 EFIservics wil n-93]CPU: ll CPUs) tartedat E2
+[   0.10948] lteratives pathing krnelcode00 udit(0.12:): stae=intializd auit_enbled= res=
+[   0.17528] w-brakpoin: fond 6 beakpint an 4 wtchpoit reisters
+[   0.18638]ASID alocaor iniialied wit 6556 entres[    0.9109] Seral0 pags
+[   0.28863 HugeLB reister64.0 iB pge siz, pr-allocted  pages[    1.304785] cryptd: max_cpu_qlen set to 1000
+[    1.328595] DRBG: Continuing without Jitter RNG
+[    1.432371] raid6: neonx8   gen()  2126 MB/s
+[    1.500431] raid6: neonx8   xor()  1586 MB/s
+[    1.568495] raid6: neonx4   gen()  2175 MB/s
+[    1.636545] raid6: neonx4   xor()  1556 MB/s
+[    1.704614] raid6: neonx2   gen()  2065 MB/s
+[    1.772669] raid6: neonx2   xor()  1428 MB/s
+[    1.840750] raid6: neonx1   gen()  1761 MB/s
+[    1.908800] raid6: neonx1   xor()  1212 MB/s
+[    1.976874] raid6: int64x8  gen()  1358 MB/s
+[    2.044928] rai[[[0;32m  OK  [0m] Finished [0;1;39mCreate Volati0:pid=677id=429467ty=(one) o7295 ss=1 1.19975] 13root@RFSOC:~# cd /run/media/mmcblk0p2
+root@RFSOC:/run/media/mmcblk0p2# 
+root@RFSOC:/run/media/mm./linux_app_a_spi2_2obc_v2.elf
+[INFO] socat started: socat -u - /dev/ttyUL1,raw,echo=0,b115200,cs8,parenb=0,cstopb=0
+Opening SPI communication interface
+Note: chip version is 0x10 (v1.0)
+CAL FW VERSION: 1
+CAL: started
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:-1 phi:14
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:-1 phi:14
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:-1 phi:14
+-------------------------------------------------------------------
+Radio calibration completed:
+  RadioA: amp:-1 phi:14
+  RadioB: amp:0 phi:0
+  TX calibration params for rf_chain 0:
+  -- power:14	dac:3	mix:10	offset_i:0	offset_q:-94
+ 1INFO: using legacy timestamp
+AGC: setting fdd_mode to 0
+ARB: dual demodulation disabled for all SF
+LoRa RX started.
+
+Received 1 packet(s):
+  RSSI: -106.4 dBm, SNR: -19.2 dB, Size: 19
+  Payload: CD C0 11 8A 93 D2 3D FF CA 21 83 F0 06 15 8F 5F CC 6F E6 
+
+Received 1 packet(s):
+  RSSI: -106.4 dBm, SNR: -19.0 dB, Size: 19
+  Payload: CC D0 DB 17 08 C9 2D BD 10 29 75 A2 79 CA 1D 46 00 29 DD 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -18.8 dB, Size: 19
+  Payload: CC 00 00 07 0E C2 4B 48 4E 29 E0 8A CA 62 17 6E 00 22 62 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -19.8 dB, Size: 19
+  Payload: CC 70 89 DF 9A B6 70 E5 D3 95 E9 D2 5C 59 D7 77 4B 89 AC 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -18.0 dB, Size: 19
+  Payload: CC 00 00 01 0E C2 28 5E 48 29 26 51 6A CE 63 C8 00 28 73 
+PF0
+
+
+
+>-----------------------------------
+>PF0
+FPGA Auto POFF
+>RF1V5[0]
+>RF3V0[0]
+>RF5V0[0]
+>FPGA_PON[0]
+>
+
+>-----------------------------------
+>GPS:
