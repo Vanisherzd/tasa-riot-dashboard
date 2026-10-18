@@ -22,6 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FOSSA_EXPORT_URL: ${{ secrets.FOSSA_EXPORT_URL }}
+      FOSSA_HUB_EMAIL: ${{ secrets.FOSSA_HUB_EMAIL }}
+      FOSSA_HUB_PASSWORD: ${{ secrets.FOSSA_HUB_PASSWORD }}
     permissions:
       contents: read
     steps:
@@ -41,6 +43,9 @@ jobs:
       - name: Fetch FOSSA messages
         if: env.FOSSA_EXPORT_URL != ''
         run: python3 scripts/fetch_fossa.py
+      - name: Fetch FOSSA hub status
+        if: env.FOSSA_HUB_EMAIL != ''
+        run: python3 scripts/fetch_fossa_hub.py
       - name: Build dashboard
         run: python3 web/build_site.py
       - name: Upload dashboard artifact

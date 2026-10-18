@@ -1,19 +1,22 @@
 {
   "devices": [
     {
-      "serial": "CA190C53C8FD",
+      "serial": "CA190C53CBFD",
       "mac": "06:50:4E:00:42:00",
-      "nodeId": ""
+      "nexusMac": "98A31628461C",
+      "nodeId": "6a044317b70852b155210501"
     },
     {
       "serial": "E1F6D4A22F51",
-      "mac": "06:50:4E:00:45:00",
-      "nodeId": ""
+      "mac": "06:50:57:00:45:00",
+      "nexusMac": "98A316039C18",
+      "nodeId": "6abcd7ef984aa0d94869ceff"
     },
     {
       "serial": "9AE62EBBC7D7",
       "mac": "06:50:4E:00:46:00",
-      "nodeId": ""
+      "nexusMac": "98A316039C3C",
+      "nodeId": "6abcd90aa43fa4f76b56f3e8"
     }
   ]
 }

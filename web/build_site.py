@@ -34,6 +34,7 @@ FILES_JSON: Final = PASS_DIR / "files.json"
 FOSSA_DIR: Final = ROOT / "data" / "fossa"
 FOSSA_MESSAGES: Final = FOSSA_DIR / "messages.jsonl"
 FOSSA_DEVICES: Final = FOSSA_DIR / "devices.json"
+FOSSA_SNAPSHOT: Final = FOSSA_DIR / "hub_snapshot.json"
 
 
 def _norm_mac(value: str) -> str:
@@ -110,6 +111,7 @@ class FossaDevice:
     serial: str
     mac: str
     node_id: str
+    nexus_mac: str = ""
 
 
 @dataclass(frozen=True)
@@ -252,9 +254,22 @@ def load_fossa_devices(path: Path) -> List[FossaDevice]:
                 serial=item["serial"],
                 mac=str(item.get("mac", "")),
                 node_id=str(item.get("nodeId", "")),
+                nexus_mac=str(item.get("nexusMac", "")),
             )
         )
     return devices
+
+
+def load_hub_snapshot(path: Path) -> List[Dict[str, object]]:
+    """Device status pulled from the FOSSA IoT Hub (scripts/fetch_fossa_hub.py); absent file = no panel."""
+    if not path.exists():
+        return []
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise DashboardDataError(f"無法讀取 {path}: {error}") from error
+    links = raw.get("links") if isinstance(raw, dict) else None
+    return [item for item in (links or []) if isinstance(item, dict)]
 
 
 def fossa_record_order(record: FossaRecord) -> Tuple[int, str]:
@@ -270,7 +285,8 @@ def fossa_device_statistics(
     for device in devices:
         matches = []
         for index, record in enumerate(records):
-            mac_matches = bool(device.mac) and _norm_mac(record.mac) == _norm_mac(device.mac)
+            known = {_norm_mac(value) for value in (device.mac, device.nexus_mac) if value}
+            mac_matches = bool(known) and _norm_mac(record.mac) in known
             node_matches = bool(device.node_id) and record.node_id == device.node_id
             if mac_matches or node_matches:
                 assigned.add(index)
@@ -511,10 +527,73 @@ def fmt_number(value: Optional[float], digits: int = 1) -> str:
     return "—" if value is None else f"{value:.{digits}f}"
 
 
+def _hub_time(value: object, millis: bool = False) -> str:
+    try:
+        number = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return "—"
+    if number <= 0:
+        return "—"
+    if millis:
+        number /= 1000
+    moment = datetime.fromtimestamp(number, tz=timezone(timedelta(hours=8)))
+    return moment.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _hub_version(value: object) -> str:
+    if isinstance(value, dict):
+        return ".".join(str(value.get(key, 0)) for key in ("major", "minor", "patch"))
+    return "—"
+
+
+def render_hub_status_panel(links: Sequence[Dict[str, object]]) -> str:
+    """FOSSA IoT Hub device status (cellular status reports), mirroring the Hub's own dashboard cards."""
+    if not links:
+        return ""
+    rows = []
+    for link in links:
+        position = link.get("position") if isinstance(link.get("position"), dict) else {}
+        lat, lng = position.get("lat"), position.get("lng")
+        if isinstance(lat, (int, float)) and isinstance(lng, (int, float)) and (lat or lng):
+            osm = f"https://www.openstreetmap.org/?mlat={lat:.6f}&mlon={lng:.6f}#map=16/{lat:.6f}/{lng:.6f}"
+            where = f'<a href="{escape(osm)}" rel="noopener">{lat:.5f}, {lng:.5f}</a>'
+        else:
+            where = '<span class="muted">—</span>'
+        active = '<span class="good">上線</span>' if link.get("active") else '<span class="muted">未上線</span>'
+        temp = link.get("temperature_c"); hum = link.get("humidity_pct")
+        climate = f"{fmt_number(temp if isinstance(temp, (int, float)) else None, 1)} °C／{fmt_number(hum if isinstance(hum, (int, float)) else None, 0)} %"
+        rows.append(
+            (
+                f'<th scope="row" class="mono">{escape(str(link.get("serial") or "—"))}</th>',
+                f"<td>{active}</td>",
+                f'<td class="mono">{escape(_hub_time(link.get("last_cell_connection_ms"), millis=True))}</td>',
+                f"<td>{where}</td>",
+                f"<td>{climate}</td>",
+                f'<td class="number">{escape(str(link.get("link_resets") if link.get("link_resets") is not None else "—"))}／{escape(str(link.get("nexus_resets") if link.get("nexus_resets") is not None else "—"))}</td>',
+                f'<td class="mono">{escape(_hub_version(link.get("link_fw")))}／{escape(_hub_version(link.get("nexus_fw")))}</td>',
+                f'<td class="mono">{escape(_hub_time(link.get("next_pass_s")))}</td>',
+                f'<td class="mono">{escape(_hub_time(link.get("last_sat_packet_s")))}</td>',
+                f'<td class="number">{escape(str(link.get("total_packets") if link.get("total_packets") is not None else "—"))}</td>',
+            )
+        )
+    table = render_table(
+        ("S/N", "狀態", "最後行動網路連線", "位置（最後回報）", "溫度／濕度", "重置 Link／Nexus", "韌體 Link／Nexus", "下次過境估計", "最後衛星封包", "IoT 封包累計"),
+        rows,
+        "FOSSA IoT Hub 裝置狀態",
+    )
+    return (
+        '<section id="fossa-hub-status" class="panel"><div class="panel__head"><h3>裝置狀態（IoT Hub）</h3>'
+        '<p>由 <code>scripts/fetch_fossa_hub.py</code> 以帳號權杖拉取 IoT Hub 之裝置狀態；狀態經行動網路回報，衛星 IoT 封包另列於下方訊息表。</p></div>'
+        + table
+        + "</section>"
+    )
+
+
 def render_fossa_sections(
     records: Sequence[FossaRecord],
     devices: Sequence[FossaDeviceStats],
     comparison: Sequence[DailyComparison],
+    hub_links: Sequence[Dict[str, object]] = (),
 ) -> str:
     valid_count = sum(record.lat is not None and record.lng is not None for record in records)
     satellite_count = sum(record.source == "satellite" for record in records)
@@ -531,8 +610,8 @@ def render_fossa_sections(
     empty_state = ""
     if not records:
         empty_state = (
-            '<div class="panel empty-state"><p><strong>尚未收到 FOSSA 訊息。</strong></p>'
-            '<p>webhook 端點格式：<code>https://fossa-webhook.&lt;subdomain&gt;.workers.dev/fossa/&lt;TOKEN&gt;</code></p></div>'
+            '<div class="panel empty-state"><p><strong>尚未收到 FOSSA 衛星 IoT 訊息。</strong></p>'
+            '<p>裝置狀態由 IoT Hub 拉取（下表）；IoT 訊息可經 Integration webhook 或 Hub API 取得。</p></div>'
         )
 
     device_rows = []
@@ -602,10 +681,11 @@ def render_fossa_sections(
     fossa_section = (
         '<section id="fossa-nexus" class="source-section"><div class="panel__head section-head">'
         '<div><p class="section-kicker">FOSSA NETWORK</p><h2>FOSSA Nexus</h2></div>'
-        '<p>Webhook 接收紀錄、裝置對照與暫定 payload 解碼；'
+        '<p>IoT Hub 裝置狀態、Webhook／Hub API 接收紀錄、裝置對照與暫定 payload 解碼；'
         '<span class="nowrap">正式座標格式</span>仍待 FOSSA 確認。</p></div>'
         + metrics
         + empty_state
+        + render_hub_status_panel(hub_links)
         + devices_panel
         + recent_panel
         + daily_panel
@@ -802,7 +882,7 @@ def render_content(
         + devices_panel
         + charts
         + packets_panel
-        + render_fossa_sections(fossa_records, fossa_devices, comparison)
+        + render_fossa_sections(fossa_records, fossa_devices, comparison, load_hub_snapshot(FOSSA_SNAPSHOT))
         + downloads
     )
 
