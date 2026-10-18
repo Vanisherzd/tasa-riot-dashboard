@@ -7,7 +7,7 @@
 - 儀表板：https://vanisherzd.github.io/tasa-riot-dashboard/
 - 更新排程：GitHub Actions 每小時第 7 分鐘執行，也可從 Actions 手動執行 `Deploy dashboard`。
 - 本機建置：`python3 scripts/fetch_riot_passes.py --since 2026-10-01 && python3 scripts/summarize_riot_passes.py && python3 web/build_site.py`
-- FOSSA：設定 repository secret `FOSSA_EXPORT_URL` 後，Actions 會從 Cloudflare Worker 匯出並保留 webhook 歷史。
+- FOSSA：設定 repository secrets `FOSSA_HUB_EMAIL`／`FOSSA_HUB_PASSWORD` 後，Actions 每小時從 FOSSA IoT Hub 拉取裝置狀態與 IoT 封包；另可設定 `FOSSA_EXPORT_URL` 從 Cloudflare Worker 匯出 webhook 歷史。
 
 更新鏡像時，請在 TASA 主倉執行：
 

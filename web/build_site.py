@@ -216,7 +216,7 @@ def latest_csv_pair() -> Tuple[Path, Path]:
 def device_statistics(packets: Sequence[PacketRow]) -> List[DeviceStats]:
     known_macs = {mac for mac, _ in KNOWN_DEVICES}
     groups = [(mac, label, [row for row in packets if row.mac == mac]) for mac, label in KNOWN_DEVICES]
-    groups.append(("other", "其他（疑似位元錯誤）", [row for row in packets if row.mac not in known_macs]))
+    groups.append(("other", "其他（地址無法解碼）", [row for row in packets if row.mac not in known_macs]))
     stats = []
     for key, label, rows in groups:
         correct = [row for row in rows if row.crc_ok]
@@ -527,6 +527,245 @@ def fmt_number(value: Optional[float], digits: int = 1) -> str:
     return "—" if value is None else f"{value:.{digits}f}"
 
 
+# ---------------------------------------------------------------- Hub-style building blocks
+TAIWAN_BBOX: Final = (119.3, 21.8, 122.2, 25.5)  # lng_min, lat_min, lng_max, lat_max
+TAIWAN_OUTLINE: Final = (
+    (121.0, 25.3), (121.6, 25.3), (121.95, 25.0), (121.75, 24.5), (121.45, 23.6), (121.1, 22.6),
+    (120.85, 21.9), (120.7, 21.95), (120.45, 22.4), (120.15, 23.1), (120.1, 23.7), (120.55, 24.5), (121.0, 25.3),
+)
+
+
+def render_cards(items: Sequence[Tuple[str, str, str]]) -> str:
+    """Hub-style metric cards: (value_html, label, modifier)."""
+    cards = "".join(
+        f'<div class="card{(" card--" + mod) if mod else ""}"><span class="card__value">{value}</span><span class="card__label">{escape(label)}</span></div>'
+        for value, label, mod in items
+    )
+    return f'<div class="cards">{cards}</div>'
+
+
+def render_tiles(pairs: Sequence[Tuple[str, str]]) -> str:
+    tiles = "".join(f'<div class="tile"><dd>{value}</dd><dt>{escape(label)}</dt></div>' for label, value in pairs)
+    return f'<dl class="tiles">{tiles}</dl>'
+
+
+def hubcard(title: str, subtitle: str, body: str, wide: bool = False) -> str:
+    cls = "hubcard hubcard--wide" if wide else "hubcard"
+    return (
+        f'<article class="{cls}"><div class="hubcard__head"><h3>{escape(title)}</h3><p>{escape(subtitle)}</p></div>'
+        f'<div class="hubcard__body">{body}</div></article>'
+    )
+
+
+def details_panel(summary: str, note: str, inner: str, open_: bool = False) -> str:
+    return (
+        f'<details class="panel"{" open" if open_ else ""}><summary>{escape(summary)} <span class="muted">{escape(note)}</span></summary>'
+        + inner
+        + "</details>"
+    )
+
+
+def osm_link(lat: float, lng: float, digits: int = 5) -> str:
+    url = f"https://www.openstreetmap.org/?mlat={lat:.6f}&mlon={lng:.6f}#map=16/{lat:.6f}/{lng:.6f}"
+    return f'<a href="{escape(url)}" rel="noopener">{lat:.{digits}f}, {lng:.{digits}f}</a>'
+
+
+def mini_map_svg(points: Sequence[Tuple[float, float, str, str]]) -> str:
+    """Inline SVG of Taiwan with device dots: (lat, lng, label, css_modifier)."""
+    lng0, lat0, lng1, lat1 = TAIWAN_BBOX
+    width, height = 320, 360
+    def sx(lng: float) -> float:
+        return (lng - lng0) / (lng1 - lng0) * width
+    def sy(lat: float) -> float:
+        return height - (lat - lat0) / (lat1 - lat0) * height
+    parts = [f'<svg class="minimap" viewBox="0 0 {width} {height}" role="img" aria-label="裝置最後位置示意圖">']
+    for lng in range(120, 123):
+        parts.append(f'<line class="grat" x1="{sx(lng):.1f}" y1="0" x2="{sx(lng):.1f}" y2="{height}"/>'
+                     f'<text class="axis" x="{sx(lng) + 2:.1f}" y="{height - 4}">{lng}°E</text>')
+    for lat in range(22, 26):
+        parts.append(f'<line class="grat" x1="0" y1="{sy(lat):.1f}" x2="{width}" y2="{sy(lat):.1f}"/>'
+                     f'<text class="axis" x="3" y="{sy(lat) - 3:.1f}">{lat}°N</text>')
+    outline = " ".join(f"{sx(lng):.1f},{sy(lat):.1f}" for lng, lat in TAIWAN_OUTLINE)
+    parts.append(f'<polygon class="land" points="{outline}"/>')
+    # ponytail: greedy pixel clustering (dots within 18 px merge); fine for a handful of devices
+    clusters: List[List[Tuple[float, float, str, str]]] = []
+    for pt in points:
+        if not (lat0 <= pt[0] <= lat1 and lng0 <= pt[1] <= lng1):
+            continue
+        for members in clusters:
+            if abs(sx(pt[1]) - sx(members[0][1])) < 18 and abs(sy(pt[0]) - sy(members[0][0])) < 18:
+                members.append(pt)
+                break
+        else:
+            clusters.append([pt])
+    for members in clusters:
+        lat = sum(m[0] for m in members) / len(members)
+        lng = sum(m[1] for m in members) / len(members)
+        mod = members[0][3]
+        label = members[0][2] if len(members) == 1 else f"{len(members)} 台（{members[0][2]} 等）"
+        title = "、".join(m[2] for m in members)
+        x, y = sx(lng), sy(lat)
+        parts.append(f'<circle class="dot{(" dot--" + mod) if mod else ""}" cx="{x:.1f}" cy="{y:.1f}" r="{5 + min(len(members), 4)}"><title>{escape(title)}</title></circle>')
+        parts.append(f'<text class="lbl" x="{min(x + 10, width - 110):.1f}" y="{y + 4:.1f}">{escape(label)}</text>')
+    parts.append("</svg>")
+    return "".join(parts)
+
+
+def _elapsed(seconds: object) -> str:
+    try:
+        total = int(seconds)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return "—"
+    days, rem = divmod(total, 86400)
+    hours, rem = divmod(rem, 3600)
+    return f"{days}d {hours}h {rem // 60}m"
+
+
+def render_riot_console(passes: Sequence[PassRow], packets: Sequence[PacketRow], devices: Sequence[DeviceStats]) -> str:
+    decodable = sorted((row for row in packets if row.crc_ok), key=lambda row: (row.unix, row.pass_local), reverse=True)
+    last_packet = decodable[0] if decodable else None
+    latest_pass = passes[0] if passes else None
+    cards = render_cards([
+        (f"{len(packets):,}", "IoT 封包（平台檔內 CC 封包）", ""),
+        (escape(last_packet.local) if last_packet else "—", "最後可解碼封包產生時間", ""),
+        (f"{len(passes):,}", "過境場次（10/01 起）", ""),
+        ((escape(latest_pass.pass_local) + f'<br><small>TCA {fmt_number(latest_pass.tca_ele)}°，{latest_pass.n_packets} 包</small>') if latest_pass else "—", "最新一場過境", ""),
+    ])
+    known = [d for d in devices if d.key != "other"]
+    points = [(d.last_lat, d.last_lng, d.label or d.key, "") for d in known if d.last_lat is not None and d.last_lng is not None]
+    poslist = "".join(
+        f'<li><span class="mono">{escape(d.key)}</span><span>{osm_link(d.last_lat, d.last_lng) if d.last_lat is not None and d.last_lng is not None else "<span class=muted>—</span>"}</span></li>'
+        for d in known
+    )
+    position_card = hubcard("位置", "各裝置最後一筆可解碼封包之座標", mini_map_svg(points) + f'<ul class="poslist">{poslist}</ul>')
+    passlist = "".join(
+        f'<li><span class="when">{escape(row.pass_local)}</span><span>TCA {fmt_number(row.tca_ele)}°／方位 {fmt_number(row.tca_azi)}°</span><span class="number">{row.n_packets} 包</span></li>'
+        for row in passes[:8]
+    ) or '<li><span class="muted">尚無過境紀錄</span></li>'
+    passes_card = hubcard("最近過境", "鐳洋平台檔案清單；過境預報待接入 TLE 計算", f'<ul class="passlist">{passlist}</ul>')
+    device_cards = []
+    for d in devices:
+        tiles = render_tiles([
+            ("封包數", f"{d.n_packets:,}"),
+            ("最後可解碼封包", escape(d.last_correct_local or "—")),
+            ("最後座標", osm_link(d.last_lat, d.last_lng) if d.last_lat is not None and d.last_lng is not None else "—"),
+            ("最近電壓", f"{fmt_number(d.latest_voltage)} V"),
+        ])
+        mac = "其他" if d.key == "other" else d.key
+        device_cards.append(f'<div class="device-card"><h4>{escape(d.label or mac)} <span class="mono">{escape(mac)}</span></h4>{tiles}</div>')
+    devices_card = hubcard("裝置狀態", "依 MAC 彙整；時間、座標與電壓採最新可解碼封包", f'<div class="device-list">{"".join(device_cards)}</div>', wide=True)
+    grid = f'<div class="grid-2">{position_card}{passes_card}</div>{devices_card}'
+    rows = []
+    for item in decodable[:50]:
+        rows.append((
+            f'<th scope="row" class="mono">{escape(item.local or "—")}</th>',
+            f'<td class="mono">{escape(item.pass_local)}</td>',
+            f'<td class="mono"><a href="raw/{quote(item.file)}" download>{escape(item.file)}</a></td>',
+            f'<td class="mono">{escape(item.mac)}</td>',
+            f"<td>{osm_link(item.lat, item.lng, 6)}</td>",
+            f'<td class="number">{item.bat_v:.1f} V</td>',
+            f'<td class="number">{item.rssi:.1f}</td>',
+            f'<td class="number">{item.snr:.1f}</td>',
+            f'<td class="number">{item.size} B</td>',
+        ))
+    messages = render_table(
+        ("Queue 時間（封包產生）", "衛星 RX 時窗（過境場次）", "雲端 RX（平台檔）", "MAC", "座標", "電壓", "RSSI", "SNR", "長度"),
+        rows,
+        "鐳洋 IoT 訊息（最近 50 筆可解碼封包）",
+    )
+    messages_panel = (
+        f'<section class="panel"><div class="panel__head"><h3>IoT 訊息（{len(decodable):,} 筆可解碼，顯示最近 50 筆）</h3>'
+        '<p>三個時間欄位與 FOSSA Hub 對齊：封包內 UnixTime 為產生時間，過境場次為衛星接收時窗，平台檔為雲端取得。</p></div>'
+        + messages + "</section>"
+    )
+    head = (
+        '<div class="console__head"><div><p class="section-kicker">RIOT-2 M9 · 鐳洋 NODE</p><h2>鐳洋 Node</h2></div>'
+        '<p>自製節點經 BLACK KITE-2 上行，鐳洋平台每場過境提供一個 UART 紀錄檔；本區每小時自動補抓並解析。</p></div>'
+    )
+    return head + cards + grid + messages_panel
+
+
+def render_fossa_console(records: Sequence[FossaRecord], hub_links: Sequence[Dict[str, object]], devices: Sequence[FossaDeviceStats]) -> str:
+    latest = max(records, key=fossa_record_order, default=None)
+    online = [link for link in hub_links if link.get("active")]
+    last_cell = max((float(link.get("last_cell_connection_ms") or 0) for link in hub_links), default=0)
+    hub_packets = sum(int(link.get("total_packets") or 0) for link in hub_links)
+    hub_last_packet = max((float(link.get("last_packet_ms") or 0) for link in hub_links), default=0)
+    cards = render_cards([
+        (f"{hub_packets:,}", "IoT packages received（IoT Hub 累計）", ""),
+        (escape(_hub_time(hub_last_packet, millis=True)), "最後 IoT package（IoT Hub）", ""),
+        (f'{len(online)}<small> / {len(hub_links) or len(devices)}</small>', "上線裝置（IoT Hub）", "signal" if online else "warn"),
+        (escape(_hub_time(last_cell, millis=True)), "最後行動網路連線", ""),
+    ])
+    _ = latest
+    points = []
+    poslist = []
+    for link in hub_links:
+        pos = link.get("position") if isinstance(link.get("position"), dict) else {}
+        lat, lng = pos.get("lat"), pos.get("lng")
+        serial = str(link.get("serial") or "—")
+        if isinstance(lat, (int, float)) and isinstance(lng, (int, float)) and (lat or lng):
+            in_tw = TAIWAN_BBOX[1] <= lat <= TAIWAN_BBOX[3] and TAIWAN_BBOX[0] <= lng <= TAIWAN_BBOX[2]
+            points.append((float(lat), float(lng), serial[-4:], "fossa"))
+            note = "" if in_tw else ' <span class="muted">（出廠測試位置）</span>'
+            poslist.append(f'<li><span class="mono">{escape(serial)}</span><span>{osm_link(float(lat), float(lng))}{note}</span></li>')
+        else:
+            poslist.append(f'<li><span class="mono">{escape(serial)}</span><span class="muted">—</span></li>')
+    position_card = hubcard("位置", "IoT Hub 最後回報位置（行動網路狀態）", mini_map_svg(points) + f'<ul class="poslist">{"".join(poslist)}</ul>')
+    passlist = "".join(
+        f'<li><span class="when">{escape(_hub_time(link.get("next_pass_s")))}</span><span>{escape(str(link.get("serial") or "—"))}</span>'
+        f'<span class="number">{"最後衛星封包 " + _hub_time(link.get("last_sat_packet_s")) if link.get("last_sat_packet_s") else "尚無衛星封包"}</span></li>'
+        for link in hub_links
+    ) or '<li><span class="muted">尚未拉取 IoT Hub 狀態</span></li>'
+    passes_card = hubcard("下一次過境估計", "IoT Hub 依裝置最後位置計算", f'<ul class="passlist">{passlist}</ul>')
+    device_cards = []
+    for link in hub_links:
+        pill = '<span class="status-pill">上線</span>' if link.get("active") else '<span class="status-pill status-pill--off">未上線</span>'
+        temp = link.get("temperature_c"); hum = link.get("humidity_pct")
+        tiles = render_tiles([
+            ("裝置時間", escape(_hub_time(link.get("status_time_s")))),
+            ("最後行動網路連線", escape(_hub_time(link.get("last_cell_connection_ms"), millis=True))),
+            ("運行時間", _elapsed(link.get("elapsed_s"))),
+            ("溫度", f"{fmt_number(temp if isinstance(temp, (int, float)) else None, 1)} °C"),
+            ("濕度", f"{fmt_number(hum if isinstance(hum, (int, float)) else None, 0)} %"),
+            ("重置 Link／Nexus", f'{link.get("link_resets") if link.get("link_resets") is not None else "—"}／{link.get("nexus_resets") if link.get("nexus_resets") is not None else "—"}'),
+            ("韌體 Link／Nexus", escape(_hub_version(link.get("link_fw")) + "／" + _hub_version(link.get("nexus_fw")))),
+            ("IoT 封包累計", escape(str(link.get("total_packets") if link.get("total_packets") is not None else "—"))),
+            ("最後 IoT 封包", escape(_hub_time(link.get("last_packet_ms"), millis=True))),
+            ("下次過境估計", escape(_hub_time(link.get("next_pass_s")))),
+            ("最後衛星接收", escape(_hub_time(link.get("last_sat_packet_s")))),
+        ])
+        device_cards.append(
+            f'<div class="device-card"><h4>{escape(str(link.get("serial") or "—"))} {pill} <span class="mono">{escape(str(link.get("link_mac") or ""))}</span></h4>{tiles}</div>'
+        )
+    if not device_cards:
+        device_cards.append('<p class="muted">尚未拉取 IoT Hub 狀態；設定 FOSSA_HUB_EMAIL／FOSSA_HUB_PASSWORD 後由排程自動更新。</p>')
+    devices_card = hubcard("裝置狀態", "來自 IoT Hub 之最後狀態回報（行動網路，每 300 s）", f'<div class="device-list">{"".join(device_cards)}</div>', wide=True)
+    grid = f'<div class="grid-2">{position_card}{passes_card}</div>{devices_card}'
+    rows = []
+    for record in sorted(records, key=fossa_record_order, reverse=True)[:50]:
+        coord = osm_link(record.lat, record.lng, 6) if record.lat is not None and record.lng is not None else '<span class="muted">—</span>'
+        rows.append((
+            f'<th scope="row" class="mono">{escape(record.queue_local or "—")}</th>',
+            f'<td class="mono">{escape(record.sat_local or "—")}</td>',
+            f'<td class="mono">{escape(record.received_at_local or "—")}</td>',
+            f'<td>{escape(record.source or "—")}</td>',
+            f'<td class="mono">{escape(record.mac or "—")}</td>',
+            f'<td class="number">{fmt_number(record.rssi, 0)}</td>',
+            f"<td>{coord}</td>",
+            f'<td class="mono payload">{escape(record.payload_hex or "—")}</td>',
+        ))
+    messages = render_table(("Queue 時間", "衛星 RX 時間", "雲端 RX 時間", "來源", "MAC", "RSSI", "暫定座標", "Payload hex"), rows, "FOSSA IoT 訊息")
+    if not rows:
+        messages = '<div class="empty"><p>尚未收到 FOSSA IoT 訊息；裝置狀態見上方卡片。</p></div>'
+    messages_panel = (
+        f'<section class="panel"><div class="panel__head"><h3>IoT 訊息（{len(records):,} 筆，顯示最近 50 筆）</h3>'
+        '<p>欄位與 FOSSA Hub 一致：Queue（裝置排入）、衛星 RX、雲端 RX（Worker／Hub 取得）。座標為暫定解碼。</p></div>'
+        + messages + "</section>"
+    )
+    return cards + grid + messages_panel
+
+
 def _hub_time(value: object, millis: bool = False) -> str:
     try:
         number = float(value)  # type: ignore[arg-type]
@@ -678,17 +917,15 @@ def render_fossa_sections(
         '<span><i class="fossa-valid"></i>暫定有效座標</span></p>'
         f'{fossa_daily_chart(comparison)}</div></section>'
     )
+    _ = (metrics, empty_state, recent_panel)
     fossa_section = (
-        '<section id="fossa-nexus" class="source-section"><div class="panel__head section-head">'
+        '<section id="fossa-nexus" class="source-section console"><div class="panel__head section-head">'
         '<div><p class="section-kicker">FOSSA NETWORK</p><h2>FOSSA Nexus</h2></div>'
-        '<p>IoT Hub 裝置狀態、Webhook／Hub API 接收紀錄、裝置對照與暫定 payload 解碼；'
+        '<p>來自 FOSSA IoT Hub 的裝置狀態與 IoT 訊息；版面對齊 Hub 裝置儀表板。'
         '<span class="nowrap">正式座標格式</span>仍待 FOSSA 確認。</p></div>'
-        + metrics
-        + empty_state
-        + render_hub_status_panel(hub_links)
-        + devices_panel
-        + recent_panel
-        + daily_panel
+        + render_fossa_console(records, hub_links, devices)
+        + details_panel('裝置對照與完整狀態表', 'devices.json 對照、IoT Hub 狀態表', render_hub_status_panel(hub_links) + devices_panel)
+        + details_panel('每日訊息圖', '全部訊息與暫定有效座標', daily_panel)
         + "</section>"
     )
 
@@ -867,7 +1104,7 @@ def render_content(
     )
 
     downloads = (
-        '<section class="panel"><div class="panel__head"><h2>下載資料</h2><p>提供產生本頁所用的原始結構化資料。</p></div>'
+        '<section id="downloads" class="panel"><div class="panel__head"><h2>下載資料</h2><p>提供產生本頁所用的原始結構化資料。</p></div>'
         '<div class="downloads">'
         f'<div class="download"><strong><a href="{quote(summary_name)}" download>逐場次 CSV</a></strong><code>{escape(summary_name)}</code></div>'
         f'<div class="download"><strong><a href="{quote(packets_name)}" download>逐封包 CSV</a></strong><code>{escape(packets_name)}</code></div>'
@@ -875,14 +1112,34 @@ def render_content(
         '<div class="download"><strong><a href="data.json" download>儀表板 JSON</a></strong><code>data.json</code></div>'
         "</div></section>"
     )
-    return (
-        metrics
+    hub_links = load_hub_snapshot(FOSSA_SNAPSHOT)
+    online = sum(1 for link in hub_links if link.get("active"))
+    overview = (
+        '<section id="overview" class="console"><div class="console__head"><div><p class="section-kicker">OVERVIEW</p><h2>總覽</h2></div>'
+        '<p>兩條鏈路的最新數字；細節見各自區塊。</p></div>'
+        + render_cards([
+            (f"{len(passes):,}", "鐳洋過境場次", ""),
+            (f"{len(packets):,}", "鐳洋 IoT 封包", ""),
+            (f"{len(fossa_records):,}", "FOSSA IoT 訊息", ""),
+            (f'{online}<small> / {len(hub_links)}</small>', "FOSSA 上線裝置", "signal" if online else "warn"),
+        ])
         + latest_panel
-        + passes_panel
-        + devices_panel
-        + charts
-        + packets_panel
-        + render_fossa_sections(fossa_records, fossa_devices, comparison, load_hub_snapshot(FOSSA_SNAPSHOT))
+        + "</section>"
+    )
+    riot_section = (
+        '<section id="riot" class="console">'
+        + render_riot_console(passes, packets, devices)
+        + details_panel('逐場次完整表', f'{len(passes)} 場，含原始檔下載', passes_panel)
+        + details_panel('各設備統計表', '含 CRC 正確筆數', devices_panel)
+        + details_panel('訊號與封包品質圖', '每場次封包與 SNR 分箱', charts)
+        + details_panel('最近 50 筆 CRC 正確封包', '原始欄位表', packets_panel)
+        + "</section>"
+    )
+    _ = metrics
+    return (
+        overview
+        + riot_section
+        + render_fossa_sections(fossa_records, fossa_devices, comparison, hub_links)
         + downloads
     )
 

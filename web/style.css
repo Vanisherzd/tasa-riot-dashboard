@@ -89,7 +89,7 @@ a:focus-visible, .table-wrap:focus-visible, .chart-scroll:focus-visible { outlin
   background: var(--surface);
 }
 
-.hero__inner { position: relative; padding-block: var(--s16); }
+.hero__inner { position: relative; padding-block: var(--s8); }
 
 .hero__orbit {
   position: absolute;
@@ -120,15 +120,15 @@ a:focus-visible, .table-wrap:focus-visible, .chart-scroll:focus-visible { outlin
 }
 
 h1 {
-  max-inline-size: 12ch;
+  max-inline-size: 40ch;
   margin: 0;
-  font-size: clamp(2.5rem, 7vw, 5.25rem);
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
   font-weight: 720;
   line-height: 1.02;
   letter-spacing: -0.045em;
 }
 
-.hero__lead { max-inline-size: 54ch; margin: var(--s6) 0 var(--s8); color: var(--ink-muted); font-size: 1.125rem; }
+.hero__lead { max-inline-size: 70ch; margin: var(--s3) 0 var(--s4); color: var(--ink-muted); font-size: 1rem; }
 
 .update-meta { display: flex; flex-wrap: wrap; gap: var(--s4) var(--s12); margin: 0; }
 .update-meta div { min-inline-size: min(260px, 100%); }
@@ -225,3 +225,58 @@ tbody th { font-weight: 600; }
   html { scroll-behavior: auto; }
   a { transition: none; }
 }
+
+/* ---- Hub-style console layout (mirrors the FOSSA IoT Hub device dashboard) ---- */
+.topnav { position: sticky; inset-block-start: 0; z-index: 5; border-block-end: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(8px); }
+.topnav ul { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s6); margin: 0; padding: var(--s3) 0; list-style: none; }
+.topnav a { color: var(--ink); font-size: 0.875rem; font-weight: 650; text-decoration: none; }
+.topnav a:hover { color: var(--accent); }
+.console { display: flex; flex-direction: column; gap: var(--s6); scroll-margin-block-start: 64px; }
+.console__head { display: flex; align-items: end; justify-content: space-between; gap: var(--s4); flex-wrap: wrap; }
+.console__head h2 { margin: 0; font-size: 1.5rem; letter-spacing: -0.02em; }
+.console__head p { margin: 0; color: var(--ink-muted); font-size: 0.875rem; max-inline-size: 70ch; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: var(--s4); }
+.card { padding: var(--s6); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); text-align: center; }
+.card__value { display: block; font: 680 1.5rem/1.2 var(--mono); letter-spacing: -0.03em; overflow-wrap: anywhere; }
+.card__value small { font-size: 0.75rem; font-weight: 500; color: var(--ink-muted); }
+.card__label { display: block; margin-block-start: var(--s2); color: var(--ink-muted); font-size: 0.8125rem; }
+.card--signal .card__value { color: var(--signal); }
+.card--warn .card__value { color: var(--warning); }
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr)); gap: var(--s4); align-items: stretch; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: var(--s4); align-items: stretch; }
+.hubcard { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); min-inline-size: 0; }
+.hubcard__head { padding: var(--s4) var(--s6); border-block-end: 1px solid var(--line); }
+.hubcard__head h3 { margin: 0; font-size: 1rem; }
+.hubcard__head p { margin: var(--s1) 0 0; color: var(--ink-muted); font-size: 0.75rem; }
+.hubcard__body { padding: var(--s4) var(--s6); flex: 1; }
+.hubcard--wide { grid-column: 1 / -1; }
+.console > .hubcard { width: 100%; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: var(--s2); margin: 0; }
+.tile { padding: var(--s3) var(--s4); border-radius: var(--r-sm); background: var(--surface-raised); min-inline-size: 0; }
+.tile dd { margin: 0; font: 650 0.9375rem/1.3 var(--mono); overflow-wrap: anywhere; }
+.tile dt { margin-block-start: 2px; color: var(--ink-muted); font-size: 0.75rem; }
+.device-list { display: grid; gap: var(--s4); }
+.device-card { padding: var(--s4); border: 1px solid var(--line); border-radius: var(--r-sm); }
+.device-card h4 { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2) var(--s3); margin: 0 0 var(--s3); font-size: 0.9375rem; }
+.device-card h4 .mono { color: var(--ink-muted); font-weight: 500; }
+.status-pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 650; background: color-mix(in srgb, var(--signal) 18%, transparent); color: var(--signal); }
+.status-pill--off { background: color-mix(in srgb, var(--ink-muted) 18%, transparent); color: var(--ink-muted); }
+.minimap { display: block; width: 100%; height: auto; border-radius: var(--r-sm); background: color-mix(in srgb, var(--accent) 6%, var(--surface-raised)); }
+.minimap .land { fill: color-mix(in srgb, var(--accent) 14%, var(--surface)); stroke: var(--accent); stroke-width: 1; stroke-opacity: 0.6; }
+.minimap .grat { stroke: var(--line); stroke-width: 0.6; }
+.minimap .dot { fill: var(--signal); stroke: var(--surface); stroke-width: 1.5; }
+.minimap .dot--fossa { fill: var(--warning); }
+.minimap .lbl { fill: var(--ink); font-size: 11px; font-family: var(--mono); }
+.minimap .axis { fill: var(--ink-muted); font-size: 10px; font-family: var(--mono); }
+.poslist { margin: var(--s3) 0 0; padding: 0; list-style: none; display: grid; gap: var(--s1); font-size: 0.8125rem; }
+.poslist li { display: flex; justify-content: space-between; gap: var(--s3); }
+.passlist { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--s2); }
+.passlist li { display: grid; grid-template-columns: auto 1fr auto; gap: var(--s3); align-items: baseline; padding-block: var(--s1); border-block-end: 1px dashed var(--line); font-size: 0.8125rem; }
+.passlist li:last-child { border-block-end: 0; }
+.passlist .when { font-family: var(--mono); font-weight: 650; }
+details.panel > summary { cursor: pointer; padding: var(--s4) var(--s6); font-weight: 650; list-style: none; }
+details.panel > summary::-webkit-details-marker { display: none; }
+details.panel > summary::before { content: "▸ "; color: var(--accent); }
+details.panel[open] > summary::before { content: "▾ "; }
+details.panel > summary .muted { font-weight: 500; font-size: 0.8125rem; }
+details.panel > .panel__head { border-block-start: 1px solid var(--line); }

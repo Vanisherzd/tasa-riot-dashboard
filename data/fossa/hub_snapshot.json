@@ -1,0 +1,155 @@
+{
+ "fetched_at": 1792335235.704161,
+ "links": [
+  {
+   "link_id": "6a044317b70852b155210501",
+   "serial": "CA190C53CBFD",
+   "link_mac": "06504E004200",
+   "nexus_mac": "98A31628461C",
+   "name": "Lin-1",
+   "active": false,
+   "last_cell_connection_ms": 1791296389704,
+   "status_time_s": 1791296371,
+   "elapsed_s": 116838,
+   "position": {
+    "alt": 700.0,
+    "lat": 70.231964,
+    "lng": -20.941051
+   },
+   "next_pass_s": 1791296616,
+   "last_sat_packet_s": 0,
+   "rx_packet_count": 0,
+   "tx_queue_len": 0,
+   "link_resets": 6,
+   "link_fw": {
+    "major": 4,
+    "minor": 5,
+    "patch": 2
+   },
+   "total_packets": 2,
+   "last_packet_ms": 1791295835193,
+   "total_commands": 21,
+   "temperature_c": 30.04158,
+   "humidity_pct": 38.178684,
+   "nexus_resets": 7,
+   "nexus_fw": {
+    "major": 5,
+    "minor": 1,
+    "patch": 6
+   },
+   "power": {
+    "battVolt": 0,
+    "bus3Volt": 3310,
+    "bus5Volt": 4972,
+    "ext4201": 0,
+    "ext4202": 0,
+    "extAdc1": 1387,
+    "extAdc2": 1361,
+    "extAdc3": 1766
+   },
+   "cell_period_s": 300,
+   "force_only_sat": false,
+   "integrations": []
+  },
+  {
+   "link_id": "6abcd90aa43fa4f76b56f3e8",
+   "serial": "9AE62EBBC7D7",
+   "link_mac": "06504E004600",
+   "nexus_mac": "98A316039C3C",
+   "name": "NEXUS 1.0",
+   "active": true,
+   "last_cell_connection_ms": 1792335192541,
+   "status_time_s": 1792335180,
+   "elapsed_s": 126751,
+   "position": {
+    "alt": 151.33,
+    "lat": 24.760689,
+    "lng": 121.06559
+   },
+   "next_pass_s": 1792335740,
+   "last_sat_packet_s": 0,
+   "rx_packet_count": 1,
+   "tx_queue_len": 0,
+   "link_resets": 8,
+   "link_fw": {
+    "major": 4,
+    "minor": 5,
+    "patch": 2
+   },
+   "total_packets": 2,
+   "last_packet_ms": 1791295831200,
+   "total_commands": 29,
+   "temperature_c": 33.26467,
+   "humidity_pct": 48.783703,
+   "nexus_resets": 10,
+   "nexus_fw": {
+    "major": 5,
+    "minor": 1,
+    "patch": 6
+   },
+   "power": {
+    "battVolt": 0,
+    "bus3Volt": 3310,
+    "bus5Volt": 4955,
+    "ext4201": 0,
+    "ext4202": 0,
+    "extAdc1": 1314,
+    "extAdc2": 1349,
+    "extAdc3": 1880
+   },
+   "cell_period_s": 300,
+   "force_only_sat": false,
+   "integrations": []
+  },
+  {
+   "link_id": "6abcd7ef984aa0d94869ceff",
+   "serial": "E1F6D4A22F51",
+   "link_mac": "065057004500",
+   "nexus_mac": "98A316039C18",
+   "name": "Lin-2",
+   "active": false,
+   "last_cell_connection_ms": 1791296250578,
+   "status_time_s": 1791296235,
+   "elapsed_s": 108596,
+   "position": {
+    "alt": 700.0,
+    "lat": 47.475613,
+    "lng": -44.660946
+   },
+   "next_pass_s": 1791296857,
+   "last_sat_packet_s": 0,
+   "rx_packet_count": 0,
+   "tx_queue_len": 0,
+   "link_resets": 8,
+   "link_fw": {
+    "major": 4,
+    "minor": 5,
+    "patch": 2
+   },
+   "total_packets": 2,
+   "last_packet_ms": 1791295800012,
+   "total_commands": 29,
+   "temperature_c": 30.268562,
+   "humidity_pct": 45.678493,
+   "nexus_resets": 9,
+   "nexus_fw": {
+    "major": 5,
+    "minor": 1,
+    "patch": 6
+   },
+   "power": {
+    "battVolt": 0,
+    "bus3Volt": 3310,
+    "bus5Volt": 4965,
+    "ext4201": 0,
+    "ext4202": 0,
+    "extAdc1": 1343,
+    "extAdc2": 1327,
+    "extAdc3": 498
+   },
+   "cell_period_s": 300,
+   "force_only_sat": false,
+   "integrations": []
+  }
+ ]
+}

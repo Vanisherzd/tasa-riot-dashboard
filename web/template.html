@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="鐳洋 M9 與 FOSSA Nexus 衛星物聯網接收、封包與設備遙測統計">
   <meta name="color-scheme" content="light dark">
-  <title>鐳洋過境資料儀表板</title>
+  <title>TASA 衛星物聯網儀表板</title>
   <style>$css</style>
 </head>
 <body>
@@ -13,15 +13,16 @@
   <header class="hero">
     <div class="hero__orbit" aria-hidden="true"></div>
     <div class="shell hero__inner">
-      <p class="eyebrow">TASA · RIOT-2 M9 TELEMETRY</p>
-      <h1>鐳洋過境<br>資料儀表板</h1>
-      <p class="hero__lead">自動彙整鐳洋過境與封包品質，呈現 <span class="nowrap">FOSSA Nexus webhook 遙測</span>。</p>
+      <p class="eyebrow">TASA · LEO IOT CONSOLE</p>
+      <h1>鐳洋 Node 與 FOSSA Nexus 衛星物聯網儀表板</h1>
+      <p class="hero__lead">仿 FOSSA IoT Hub 裝置儀表板版面：每條鏈路呈現接收統計、位置、過境、裝置狀態與 IoT 訊息；資料每小時自動更新。</p>
       <dl class="update-meta">
         <div><dt>資料更新</dt><dd>$generated_at</dd></div>
         <div><dt>涵蓋區間</dt><dd>$coverage</dd></div>
       </dl>
     </div>
   </header>
+  <nav class="topnav" aria-label="章節"><div class="shell"><ul><li><a href="#overview">總覽</a></li><li><a href="#riot">鐳洋 Node</a></li><li><a href="#fossa-nexus">FOSSA Nexus</a></li><li><a href="#source-comparison">雙軌對照</a></li><li><a href="#downloads">下載</a></li></ul></div></nav>
   <main id="main" class="shell stack">
     $content
   </main>
