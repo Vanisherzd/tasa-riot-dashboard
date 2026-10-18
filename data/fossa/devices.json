@@ -2,17 +2,17 @@
   "devices": [
     {
       "serial": "CA190C53C8FD",
-      "mac": "",
+      "mac": "06:50:4E:00:42:00",
       "nodeId": ""
     },
     {
       "serial": "E1F6D4A22F51",
-      "mac": "",
+      "mac": "06:50:4E:00:45:00",
       "nodeId": ""
     },
     {
       "serial": "9AE62EBBC7D7",
-      "mac": "",
+      "mac": "06:50:4E:00:46:00",
       "nodeId": ""
     }
   ]

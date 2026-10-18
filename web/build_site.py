@@ -34,6 +34,11 @@ FILES_JSON: Final = PASS_DIR / "files.json"
 FOSSA_DIR: Final = ROOT / "data" / "fossa"
 FOSSA_MESSAGES: Final = FOSSA_DIR / "messages.jsonl"
 FOSSA_DEVICES: Final = FOSSA_DIR / "devices.json"
+
+
+def _norm_mac(value: str) -> str:
+    """Compare MACs regardless of separators and case (06:50:4E:00:42:00 == 06504e004200)."""
+    return "".join(ch for ch in value if ch.isalnum()).casefold()
 TAIPEI: Final = timezone(timedelta(hours=8))
 KNOWN_DEVICES: Final = (
     ("cc000001", "蚵棚"),
@@ -265,7 +270,7 @@ def fossa_device_statistics(
     for device in devices:
         matches = []
         for index, record in enumerate(records):
-            mac_matches = bool(device.mac) and record.mac.casefold() == device.mac.casefold()
+            mac_matches = bool(device.mac) and _norm_mac(record.mac) == _norm_mac(device.mac)
             node_matches = bool(device.node_id) and record.node_id == device.node_id
             if mac_matches or node_matches:
                 assigned.add(index)
