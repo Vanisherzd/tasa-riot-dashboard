@@ -3,31 +3,113 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="鐳洋 M9 與 FOSSA Nexus 衛星物聯網接收、封包與設備遙測統計">
+  <meta name="description" content="鐳洋 Node 與 FOSSA Nexus 衛星物聯網裝置儀表板：接收統計、位置、過境、裝置狀態與 IoT 訊息">
   <meta name="color-scheme" content="light dark">
   <title>TASA 衛星物聯網儀表板</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
   <style>$css</style>
+  <script>document.documentElement.classList.add("js");</script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳至主要內容</a>
-  <header class="hero">
-    <div class="hero__orbit" aria-hidden="true"></div>
-    <div class="shell hero__inner">
-      <p class="eyebrow">TASA · LEO IOT CONSOLE</p>
-      <h1>鐳洋 Node 與 FOSSA Nexus 衛星物聯網儀表板</h1>
-      <p class="hero__lead">仿 FOSSA IoT Hub 裝置儀表板版面：每條鏈路呈現接收統計、位置、過境、裝置狀態與 IoT 訊息；資料每小時自動更新。</p>
-      <dl class="update-meta">
-        <div><dt>資料更新</dt><dd>$generated_at</dd></div>
-        <div><dt>涵蓋區間</dt><dd>$coverage</dd></div>
-      </dl>
-    </div>
+  <header class="appbar">
+    <button class="appbar__menu" type="button" aria-label="開啟選單" aria-controls="sidebar">☰</button>
+    <a class="brand" href="#overview">TASA <span>IoT Hub</span></a>
+    <dl class="appbar__meta">
+      <div><dt>資料更新</dt><dd>$generated_at</dd></div>
+      <div><dt>鐳洋涵蓋</dt><dd>$coverage</dd></div>
+    </dl>
   </header>
-  <nav class="topnav" aria-label="章節"><div class="shell"><ul><li><a href="#overview">總覽</a></li><li><a href="#riot">鐳洋 Node</a></li><li><a href="#fossa-nexus">FOSSA Nexus</a></li><li><a href="#source-comparison">雙軌對照</a></li><li><a href="#downloads">下載</a></li></ul></div></nav>
-  <main id="main" class="shell stack">
-    $content
-  </main>
-  <footer class="shell footer">
-    <p>內部研究資料 · 時間均為 UTC+8 · 鐳洋封包以 CRC-8 poly 0x31 驗證 · FOSSA 座標為暫定解碼</p>
-  </footer>
+  <div class="layout">
+    <nav id="sidebar" class="sidebar" aria-label="裝置與網路">
+      $nav
+    </nav>
+    <main id="main" class="content">
+      $content
+      <p class="footer">內部研究資料 · 時間均為 UTC+8 · 鐳洋封包以 CRC-8 poly 0x31 驗證 · FOSSA 座標為暫定解碼 · 衛星影像 Esri World Imagery</p>
+    </main>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+  (function () {
+    var views = Array.prototype.slice.call(document.querySelectorAll(".view"));
+    var links = Array.prototype.slice.call(document.querySelectorAll(".sidebar a[data-link]"));
+    var maps = [];
+    function mapFor(el) {
+      for (var i = 0; i < maps.length; i++) if (maps[i].el === el) return maps[i].map;
+      return null;
+    }
+    function drawMap(el) {
+      if (!window.L) return;
+      var existing = mapFor(el);
+      if (existing) { existing.invalidateSize(); return; }
+      var pts = [];
+      try { pts = JSON.parse(el.getAttribute("data-points") || "[]"); } catch (e) { pts = []; }
+      var map = L.map(el, { scrollWheelZoom: false, zoomControl: true });
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+        maxZoom: 19, attribution: "Imagery &copy; Esri, Maxar, Earthstar Geographics"
+      }).addTo(map);
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {
+        maxZoom: 19, opacity: 0.85
+      }).addTo(map);
+      var markers = [];
+      pts.forEach(function (p) {
+        var m = L.circleMarker([p.lat, p.lng], {
+          radius: p.r || 8, color: "#ffffff", weight: p.r && p.r < 6 ? 1 : 2,
+          fillColor: p.color || "#43d6a0", fillOpacity: p.op == null ? 1 : p.op, opacity: p.op == null ? 1 : p.op
+        }).addTo(map);
+        if (p.html) m.bindPopup(p.html);
+        if (p.label && !(p.r && p.r < 6)) m.bindTooltip(p.label, { direction: "top", offset: [0, -8] });
+        markers.push(m);
+      });
+      if (markers.length) {
+        var bounds = L.featureGroup(markers).getBounds();
+        map.fitBounds(bounds.pad(0.25), { maxZoom: parseInt(el.getAttribute("data-zoom") || "16", 10) });
+      } else {
+        map.setView([23.7, 121.0], 7);
+      }
+      maps.push({ el: el, map: map });
+    }
+    function show(hash) {
+      var route = (hash || "#overview").slice(1).split("@");
+      var name = decodeURIComponent(route[0] || "overview");
+      var tab = route[1] || "";
+      var view = null;
+      views.forEach(function (v) { if (v.getAttribute("data-view") === name) view = v; });
+      if (!view) view = views[0];
+      name = view.getAttribute("data-view");
+      views.forEach(function (v) { v.classList.toggle("is-active", v === view); });
+      links.forEach(function (a) { a.classList.toggle("is-active", a.getAttribute("data-link") === name); });
+      var tabs = Array.prototype.slice.call(view.querySelectorAll(".tab"));
+      var panels = Array.prototype.slice.call(view.querySelectorAll(".tabpanel"));
+      if (tabs.length) {
+        var ok = tabs.some(function (t) { return t.getAttribute("data-tab") === tab; });
+        if (!ok) tab = tabs[0].getAttribute("data-tab");
+        tabs.forEach(function (t) {
+          var on = t.getAttribute("data-tab") === tab;
+          t.classList.toggle("is-active", on);
+          t.setAttribute("aria-selected", on ? "true" : "false");
+        });
+        panels.forEach(function (p) { p.classList.toggle("is-active", p.getAttribute("data-tab") === tab); });
+      }
+      Array.prototype.slice.call(view.querySelectorAll(".map")).forEach(function (el) {
+        var panel = el.closest(".tabpanel");
+        if (!panel || panel.classList.contains("is-active")) drawMap(el);
+      });
+      document.body.classList.remove("nav-open");
+      window.scrollTo(0, 0);
+    }
+    document.addEventListener("click", function (e) {
+      var t = e.target.closest(".tab");
+      if (!t) return;
+      var v = t.closest(".view");
+      location.hash = "#" + v.getAttribute("data-view") + "@" + t.getAttribute("data-tab");
+    });
+    var menu = document.querySelector(".appbar__menu");
+    if (menu) menu.addEventListener("click", function () { document.body.classList.toggle("nav-open"); });
+    window.addEventListener("hashchange", function () { show(location.hash); });
+    show(location.hash);
+  })();
+  </script>
 </body>
 </html>
