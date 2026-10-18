@@ -58,8 +58,12 @@
           radius: p.r || 8, color: "#ffffff", weight: p.r && p.r < 6 ? 1 : 2,
           fillColor: p.color || "#43d6a0", fillOpacity: p.op == null ? 1 : p.op, opacity: p.op == null ? 1 : p.op
         }).addTo(map);
-        if (p.html) m.bindPopup(p.html);
-        if (p.label && !(p.r && p.r < 6)) m.bindTooltip(p.label, { direction: "top", offset: [0, -8] });
+        if (p.html) m.bindPopup(p.html); // html is built server-side from escaped values
+        if (p.label && !(p.r && p.r < 6)) {
+          var tip = document.createElement("span");
+          tip.textContent = p.label; // text node: labels come from device data, never trusted as markup
+          m.bindTooltip(tip, { direction: "top", offset: [0, -8] });
+        }
         markers.push(m);
       });
       if (markers.length) {
