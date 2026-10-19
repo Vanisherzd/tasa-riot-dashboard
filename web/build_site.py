@@ -24,7 +24,7 @@ ROOT: Final = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.parse_fossa import FossaRecord, load_records  # noqa: E402
+from scripts.parse_fossa import FossaRecord, load_records, local_time  # noqa: E402
 
 WEB_DIR: Final = ROOT / "web"
 PUBLIC_DIR: Final = WEB_DIR / "public"
@@ -92,6 +92,8 @@ class PacketRow:
     rssi: float
     snr: float
     size: int
+    line: int = 0
+    hex: str = ""
 
 
 @dataclass(frozen=True)
@@ -198,6 +200,8 @@ def load_packets(path: Path) -> List[PacketRow]:
             rssi=float(row.get("rssi", "0") or 0),
             snr=float(row.get("snr", "0") or 0),
             size=int(row.get("size", "0") or 0),
+            line=int(row.get("line", "0") or 0),
+            hex=row.get("hex", ""),
         )
         for row in rows
     ]
@@ -733,24 +737,44 @@ def panel(title: str, note: str, inner: str) -> str:
 def riot_messages_table(items: Sequence[PacketRow], caption: str, limit: int) -> str:
     rows = []
     for item in items[:limit]:
-        rows.append((
-            f'<th scope="row" class="mono">{escape(item.local or "—")}</th>',
-            f'<td class="mono">{escape(item.pass_local)}</td>',
-            f'<td class="mono"><a href="raw/{quote(item.file)}" download>{escape(item.file)}</a></td>',
+        decoded = (
             f'<td class="mono">{escape(item.mac)}</td>',
-            f"<td>{osm_link(item.lat, item.lng, 6)}</td>",
+            f'<td>{osm_link(item.lat, item.lng, 6)}</td>',
+            f'<td class="mono">{escape(local_time(item.unix) or "—")}</td>',
             f'<td class="number">{item.bat_v:.1f} V</td>',
-            f'<td class="number">{item.rssi:.1f}</td>',
-            f'<td class="number">{item.snr:.1f}</td>',
-            f'<td class="number">{item.size} B</td>',
+        ) if item.crc_ok else (
+            '<td colspan="4" class="warning">CRC-8 失敗：解碼欄位不可信，已隱藏。</td>',
+        )
+        rows.append((
+            f'<th scope="row" class="mono">{escape(item.pass_local)}</th>',
+            f'<td class="mono"><a href="raw/{quote(item.file)}" download>{escape(item.file)}</a><br>行 {item.line} · {item.size} B</td>',
+            f'<td class="{"good" if item.crc_ok else "warning"}">CRC-8 {"通過" if item.crc_ok else "失敗"}</td>',
+            f'<td class="number">{item.rssi:.1f} dBm / {item.snr:.1f} dB</td>',
+            f'<td><pre class="mono packet-text">{escape(item.hex or "—")}</pre></td>',
+            *decoded,
         ))
     if not rows:
-        return '<div class="empty"><p>尚無可解碼封包。</p></div>'
+        return '<div class="empty"><p>尚無封包；請確認本機過境紀錄與逐封包 CSV 已產生。</p></div>'
     return render_table(
-        ("Queue 時間（封包產生）", "衛星 RX 時窗（過境場次）", "雲端 RX（平台檔）", "MAC", "座標", "電壓", "RSSI", "SNR", "長度"),
+        ("接收／過境時間（UTC+8）", "過境（原始檔）", "CRC-8", "RSSI / SNR", "Raw hex", "裝置地址", "緯度／經度", "封包時間（Unix → UTC+8）", "電池電壓"),
         rows,
         caption,
     )
+
+
+def riot_packet_contents(items: Sequence[PacketRow], caption: str) -> str:
+    groups: Dict[Tuple[str, str], List[PacketRow]] = {}
+    for item in sorted(items, key=lambda row: (row.pass_local, row.file, row.line), reverse=True):
+        groups.setdefault((item.pass_local, item.file), []).append(item)
+    details = []
+    for index, ((when, filename), packets) in enumerate(groups.items()):
+        summary = f'{when} UTC+8 · {filename} · {len(packets):,} 包 · CRC-8 通過 {sum(p.crc_ok for p in packets):,}'
+        details.append(
+            f'<details class="packet-pass"{" open" if index < 2 else ""}><summary>{escape(summary)}</summary>'
+            + riot_messages_table(packets, f"{caption} · {when} · {filename}", len(packets))
+            + '</details>'
+        )
+    return ''.join(details) or '<div class="empty"><p>尚無封包；請確認本機過境紀錄與逐封包 CSV 已產生。</p></div>'
 
 
 def riot_passes_table(passes: Sequence[PassRow], caption: str) -> str:
@@ -806,6 +830,7 @@ def predicted_card(predicted: Dict[str, object], now: datetime, title: str = "�
 
 
 def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], devices: Sequence[DeviceStats], predicted: Dict[str, object], now: datetime) -> str:
+    received = sorted(packets, key=lambda r: (r.pass_local, r.file, r.line), reverse=True)
     decodable = sorted((r for r in packets if r.crc_ok), key=lambda r: (r.unix, r.pass_local), reverse=True)
     known = [d for d in devices if d.key != "other"]
     other = next((d for d in devices if d.key == "other"), None)
@@ -844,22 +869,22 @@ def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], d
             hubcard("最近過境", "鐳洋平台檔案清單（實際接收場次）", riot_pass_list(passes)),
         )
         + hubcard("訊號品質", "每場次封包數與可解碼數", f'<div class="chart chart--compact">{pass_chart(passes)}</div>', wide=True)
-        + hubcard("最近 IoT 訊息", "三個時間欄位與 FOSSA Hub 對齊：封包內 UnixTime、過境場次、平台檔取得時間",
-                  riot_messages_table(decodable, "鐳洋最近 10 筆可解碼封包", 10), wide=True)
+        + hubcard("最近封包內容", "最近 10 包（含 CRC 失敗）；完整歷史見「封包內容」分頁。接收時間為過境時窗，非逐包接收時刻。",
+                  riot_messages_table(received, "鐳洋最近 10 筆封包", 10), wide=True)
     )
     out = [
         view_open("riot", "鐳洋 NODE · RIOT-2 M9 · BLACK KITE-2", "鐳洋 Node 網路",
-                  [("dash", "儀表板"), ("passes", "過境"), ("quality", "訊號品質"), ("msgs", "IoT 訊息")],
+                  [("dash", "儀表板"), ("passes", "過境"), ("quality", "訊號品質"), ("msgs", "封包內容")],
                   "自製節點經 BLACK KITE-2 上行，鐳洋平台每場過境提供一個 UART 紀錄檔；每小時自動補抓並解析。"),
         tabpanel("dash", dash),
         tabpanel("passes", predicted_card(predicted, now, "未來 48 小時過境預測", 12, wide=True) + panel("逐場次（實際接收）", f"{len(passes)} 場，最新在上；原始檔可直接下載。", riot_passes_table(passes, "逐場次資料"))),
         tabpanel("quality", riot_charts(passes, packets)),
-        tabpanel("msgs", panel("IoT 訊息", f"{len(decodable):,} 筆可解碼封包，顯示最近 200 筆。", riot_messages_table(decodable, "鐳洋可解碼封包", 200))),
+        tabpanel("msgs", panel("封包內容", f"全部 {len(packets):,} 包；依接收場次與行號倒序，最近兩場展開。接收時間為過境時窗（UTC+8）；CRC 失敗時隱藏不可信解碼值。", riot_packet_contents(packets, "鐳洋封包內容"))),
         "</section>",
     ]
     for d in known:
         mine = [r for r in decodable if r.mac == d.key]
-        mine_all = [r for r in packets if r.mac == d.key]
+        mine_all = [r for r in received if r.mac == d.key]
         my_passes = [p for p in passes if d.key in p.macs_known]
         last = mine[0] if mine else None
         title = f'{escape(d.label or d.key)} <span class="mono">{escape(d.key)}</span>'
@@ -900,7 +925,7 @@ def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], d
                 hubcard("裝置狀態", "採最新可解碼封包", status),
             )
             + predicted_card(predicted, now, "下次過境預測", 5, wide=True)
-            + hubcard("最近 IoT 訊息", "最近 10 筆可解碼封包", riot_messages_table(mine, f"{d.key} 最近封包", 10), wide=True)
+            + hubcard("最近封包內容", "最近 10 包（含 CRC 失敗）；CRC 失敗之裝置歸屬僅依收到的地址 bytes 暫列，未經驗證。", riot_messages_table(mine_all, f"{d.key} 最近封包", 10), wide=True)
         )
         config = render_tiles([
             ("名稱", escape(d.label or "—")),
@@ -911,9 +936,9 @@ def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], d
             ("封包驗證", "CRC-8（poly 0x31）"),
         ])
         out += [
-            view_open(f"riot/{d.key}", "鐳洋 NODE · 裝置", title, [("dash", "儀表板"), ("msgs", "IoT 訊息"), ("passes", "過境"), ("config", "設定")]),
+            view_open(f"riot/{d.key}", "鐳洋 NODE · 裝置", title, [("dash", "儀表板"), ("msgs", "封包內容"), ("passes", "過境"), ("config", "設定")]),
             tabpanel("dash", dash),
-            tabpanel("msgs", panel("IoT 訊息", f"{len(mine):,} 筆可解碼封包，顯示最近 200 筆。", riot_messages_table(mine, f"{d.key} 可解碼封包", 200))),
+            tabpanel("msgs", panel("封包內容", f"全部 {len(mine_all):,} 包；最近兩場展開。CRC 失敗之裝置歸屬僅依收到的地址 bytes 暫列，未經驗證；解碼值不可信，已隱藏。", riot_packet_contents(mine_all, f"{d.key} 封包內容"))),
             tabpanel("passes", predicted_card(predicted, now, "未來 48 小時過境預測", 12, wide=True) + panel("過境（實際接收）", f"此裝置出現在 {len(my_passes)} 場過境。", riot_passes_table(my_passes, f"{d.key} 過境"))),
             tabpanel("config", hubcard("設定", "裝置登錄資訊（靜態）", config, wide=True)),
             "</section>",
@@ -938,9 +963,9 @@ def fossa_units(hub_links: Sequence[Dict[str, object]], devices: Sequence[FossaD
     for unit in units:
         link, dev = unit["link"], unit["dev"]
         macs = {_norm_mac(str(v)) for v in (link.get("link_mac"), link.get("nexus_mac"), dev.mac if dev else "", dev.nexus_mac if dev else "") if v}
-        node_id = dev.node_id if dev else ""
+        node_ids = {str(v) for v in (link.get("link_id"), dev.node_id if dev else "") if v}
         unit["records"] = sorted(
-            (r for r in records if _norm_mac(r.mac) in macs or (node_id and r.node_id == node_id)),
+            (r for r in records if _norm_mac(r.mac) in macs or r.node_id in node_ids),
             key=fossa_record_order, reverse=True,
         )
         pos = link.get("position") if isinstance(link.get("position"), dict) else {}
@@ -980,23 +1005,29 @@ def gps_status_list(units: Sequence[dict]) -> str:
     return f'<ul class="passlist">{rows}</ul>'
 
 
-def fossa_messages_table(records: Sequence[FossaRecord], caption: str, limit: int) -> str:
+def fossa_messages_table(records: Sequence[FossaRecord], caption: str, units: Sequence[dict]) -> str:
+    names = {
+        id(record): (unit["serial"], str(unit["link"].get("name") or unit["serial"]))
+        for unit in units for record in unit["records"]
+    }
     rows = []
-    for record in records[:limit]:
-        coord = osm_link(record.lat, record.lng, 6) if record.lat is not None and record.lng is not None else '<span class="muted">—</span>'
+    for record in sorted(records, key=fossa_record_order, reverse=True):
+        serial, name = names.get(id(record), ("", "未登錄"))
+        device = f'<a href="#fossa/{quote(serial)}">{escape(name)} · {escape(serial)}</a>' if serial else escape(name)
         rows.append((
-            f'<th scope="row" class="mono">{escape(record.queue_local or "—")}</th>',
+            f'<th scope="row" class="mono">{escape(record.sat_local or record.received_at_local or record.queue_local or "—")}</th>',
+            f'<td>{device}<br><span class="mono">MAC {escape(record.mac or "—")}<br>Link/node {escape(record.node_id or "—")}</span></td>',
+            f'<td><pre class="mono packet-text">{escape(record.message_text or "—")}</pre></td>',
+            f'<td><pre class="mono packet-text">{escape(record.payload_text or "—")}</pre></td>',
+            f'<td><span class="muted">{escape(record.payload_encoding)}</span><pre class="mono packet-text">{escape(record.payload_hex or "—")}</pre></td>',
+            f'<td><pre class="mono packet-text">{escape(record.metadata_json or "—")}</pre></td>',
+            f'<td class="mono">{escape(record.queue_local or "—")}</td>',
             f'<td class="mono">{escape(record.sat_local or "—")}</td>',
             f'<td class="mono">{escape(record.received_at_local or "—")}</td>',
-            f'<td>{escape(record.source or "—")}</td>',
-            f'<td class="mono">{escape(record.mac or "—")}</td>',
-            f'<td class="number">{fmt_number(record.rssi, 0)}</td>',
-            f"<td>{coord}</td>",
-            f'<td class="mono payload">{escape(record.payload_hex or "—")}</td>',
         ))
     if not rows:
-        return '<div class="empty"><p>尚未收到衛星 IoT 訊息；IoT Hub 的封包計數見上方卡片。</p></div>'
-    return render_table(("Queue 時間", "衛星 RX 時間", "雲端 RX 時間", "來源", "MAC", "RSSI", "暫定座標", "Payload hex"), rows, caption)
+        return '<div class="empty"><p>尚無 FOSSA 封包內容：本機 messages.jsonl 為空或不存在；建站需先還原 Actions cache 或匯入匯出紀錄。Hub 計數不代表本機已有封包內容。</p></div>'
+    return render_table(("時間（UTC+8）", "Link／裝置名稱", "原始 message / payload", "Payload 文字（未解碼）", "Payload hex", "Metadata（原始紀錄）", "Queue（UTC+8）", "衛星 RX（UTC+8）", "雲端 RX（UTC+8）"), rows, caption)
 
 
 def _power(value: object) -> str:
@@ -1052,9 +1083,10 @@ def fossa_hub_table(units: Sequence[dict]) -> str:
 
 
 def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], comparison: Sequence[DailyComparison]) -> str:
+    raw_note = "廠商尚未提供 payload schema；以下僅顯示原始內容與傳輸 bytes，不解碼內容或推測座標。時間為衛星 RX，缺少時依序採雲端 RX、Queue（UTC+8）。"
     links = [u["link"] for u in units if u["link"]]
-    online = [l for l in links if l.get("active")]
-    last_cell = max((float(l.get("last_cell_connection_ms") or 0) for l in links), default=0)
+    online = [link for link in links if link.get("active")]
+    last_cell = max((float(link.get("last_cell_connection_ms") or 0) for link in links), default=0)
     fixed = [u for u in units if gps_fix(u)]
     cards = render_cards([
         (f'{len(fixed)}<small> / {len(units)}</small>', "有 GPS 定位（Hub 位置回報）", "signal" if fixed else "warn"),
@@ -1088,13 +1120,15 @@ def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], co
             hubcard("GPS 定位狀態", "本計畫只看各台是否有 GPS 定位：位置由 Nexus 的 GPS 經行動網路狀態回報", gps_status_list(units)),
             hubcard("下一次過境估計（IoT Hub）", f"Hub 依裝置最後位置計算，只對上線裝置更新；快照 {hub_snapshot_time(FOSSA_SNAPSHOT)}", f'<ul class="passlist">{passlist}</ul>'),
         )
+        + hubcard("最近封包內容", raw_note, fossa_messages_table(sorted(records, key=fossa_record_order, reverse=True)[:10], "FOSSA 最近 10 筆封包內容", units), wide=True)
     )
     out = [
         view_open("fossa", "FOSSA NETWORK · NEXUS", "FOSSA Nexus 網路",
-                  [("dash", "儀表板"), ("status", "裝置狀態表")],
-                  f"純 GPS 定位節點：只看各台有沒有 GPS 定位，不看 IoT 訊息內容。裝置狀態由 IoT Hub 以帳號權杖拉取（行動網路回報，每 300 s），快照時間 {hub_snapshot_time(FOSSA_SNAPSHOT)}。"),
+                  [("dash", "儀表板"), ("status", "裝置狀態表"), ("msgs", "封包內容")],
+                  f"GPS 定位狀態與原始封包內容分開呈現。裝置狀態由 IoT Hub 以帳號權杖拉取（行動網路回報，每 300 s），快照時間 {hub_snapshot_time(FOSSA_SNAPSHOT)}。"),
         tabpanel("dash", dash),
         tabpanel("status", panel("裝置狀態（IoT Hub）", "由 <code>scripts/fetch_fossa_hub.py</code> 拉取；GPS 定位以 Hub 回報位置是否為台灣境內之有效座標判定。", fossa_hub_table(units))),
+        tabpanel("msgs", panel("封包內容", f"全部 {len(records):,} 包，最新在上。{raw_note}", fossa_messages_table(records, "FOSSA 封包內容", units))),
         "</section>",
     ]
     for u in units:
@@ -1117,6 +1151,7 @@ def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], co
         dash = (
             cards
             + grid2(hubcard("位置", map_note, map_div(pts, 17)), hubcard("主機狀態", "IoT Hub 最後狀態回報", fossa_host_tiles(link) if link else '<p class="muted">尚未拉取 IoT Hub 狀態。</p>'))
+            + hubcard("最近封包內容", raw_note, fossa_messages_table(u["records"][:10], f"{serial} 最近 10 筆封包內容", units), wide=True)
         )
         config = render_tiles([
             ("裝置", "FOSSA Nexus（Link + Nexus modem）"),
@@ -1130,8 +1165,9 @@ def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], co
             ("用途", "純 GPS 定位對照節點（不上傳感測 IoT 資料）"),
         ])
         out += [
-            view_open(f"fossa/{serial}", "FOSSA NEXUS · 裝置", title, [("dash", "儀表板"), ("config", "設定")]),
+            view_open(f"fossa/{serial}", "FOSSA NEXUS · 裝置", title, [("dash", "儀表板"), ("msgs", "封包內容"), ("config", "設定")]),
             tabpanel("dash", dash),
+            tabpanel("msgs", panel("封包內容", f"全部 {len(u['records']):,} 包，最新在上。{raw_note}", fossa_messages_table(u["records"], f"{serial} 封包內容", units))),
             tabpanel("config", hubcard("設定", "對應 IoT Hub Configuration 分頁；資料來自 Hub 狀態快照與 devices.json", config, wide=True)),
             "</section>",
         ]
@@ -1143,7 +1179,7 @@ def render_overview(passes, packets, devices, units, records, predicted: Dict[st
     decodable = sorted((r for r in packets if r.crc_ok), key=lambda r: (r.unix, r.pass_local), reverse=True)
     known = [d for d in devices if d.key != "other"]
     links = [u["link"] for u in units if u["link"]]
-    online = [l for l in links if l.get("active")]
+    online = [link for link in links if link.get("active")]
     fixed = [u for u in units if gps_fix(u)]
     cards = render_cards([
         (f"{len(decodable):,}", "鐳洋可解碼 IoT 封包", ""),
@@ -1179,8 +1215,8 @@ def render_overview(passes, packets, devices, units, records, predicted: Dict[st
         ("最近 24 小時", f"{len(recent)} 場 · {recent_ok} 包可解碼"),
         ("下次過境預測（TLE）", next_pass_tile(predicted.get("riot") or {}, now)),
     ])
-    last_cell = max((float(l.get("last_cell_connection_ms") or 0) for l in links), default=0)
-    next_pass = min((float(l.get("next_pass_s") or 0) for l in online), default=0)
+    last_cell = max((float(link.get("last_cell_connection_ms") or 0) for link in links), default=0)
+    next_pass = min((float(link.get("next_pass_s") or 0) for link in online), default=0)
     fossa_status = render_tiles([
         ("最後行動網路連線", escape(_hub_time(last_cell, millis=True))),
         ("上線裝置下次過境估計", escape(_hub_next_pass(next_pass))),
@@ -1327,8 +1363,10 @@ def main() -> None:
     template = Template((WEB_DIR / "template.html").read_text(encoding="utf-8"))
     html = template.substitute(
         css=(WEB_DIR / "style.css").read_text(encoding="utf-8"),
+        leaflet_css=(WEB_DIR / "vendor" / "leaflet" / "leaflet.css").read_text(encoding="utf-8"),
+        leaflet_js=(WEB_DIR / "vendor" / "leaflet" / "leaflet.js").read_text(encoding="utf-8"),
         generated_at=now.strftime("%Y-%m-%d %H:%M:%S UTC+8"),
-        coverage=coverage,
+        coverage=escape(coverage),
         nav=nav,
         content=content,
     )

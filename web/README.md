@@ -1,6 +1,24 @@
 # 鐳洋過境資料儀表板
 
-`web/update.sh` 會依序下載鐳洋平台的新過境檔、重算逐場次／逐封包 CSV，並在已設定 `FOSSA_EXPORT_URL` 時匯出 FOSSA Nexus webhook 訊息，再以 Python 3.9+ 標準函式庫產生可離線瀏覽的 `web/public/index.html`。頁面不載入外部 JavaScript、字型或 CDN；OpenStreetMap 只在使用者點座標連結時開啟。
+`web/update.sh` 會依序下載鐳洋平台的新過境檔、重算逐場次／逐封包 CSV，並在已設定 `FOSSA_EXPORT_URL` 時匯出 FOSSA Nexus webhook 訊息，再以 Python 3.9+ 標準函式庫產生可離線瀏覽的 `web/public/index.html`。頁面不載入外部 JavaScript、字型或 CDN；Leaflet 1.9.4 與授權放在 `web/vendor/leaflet/`，建站時內嵌。衛星影像仍需連線至 Esri 圖磚服務；封包內容與 GPS 狀態不需網路。OpenStreetMap 只在使用者點座標連結時開啟。
+
+## 封包內容
+
+鐳洋與 FOSSA 的網路頁、每個裝置頁都有「封包內容」分頁；儀表板另顯示最近十包預覽。所有時間為 UTC+8，寬表格可在自己的區域內水平捲動。
+
+- **鐳洋（BK-2 M9）**：讀取 `summarize_riot_passes.py` 產生的逐封包 CSV，依過境時間、原始檔與 UART 行號倒序排列，完整保留所有封包。每場使用原生 `<details>`，預設展開最近兩場。接收／過境時間是場次時窗，來源沒有逐包接收時刻；封包內 UnixTime 另列。每列顯示 CRC-8 結果、RSSI／SNR 與完整 raw hex。只有 CRC 通過才顯示裝置地址、座標、Unix 轉換時間與電池電壓；CRC 失敗的解碼值標示不可信並隱藏。裝置頁的 CRC 失敗封包僅依收到的地址 bytes 暫列，歸屬未驗證；地址損壞的封包仍可在網路頁找到。
+- **FOSSA Nexus**：讀取本機或 Actions cache 還原的 `data/fossa/messages.jsonl`（`packet_to_record` 格式），顯示原始 message/payload、傳輸 bytes 的文字與 hex、Link／裝置名稱，以及完整 metadata（含 RSSI／SNR、衛星等可用欄位）。Base64 字串還原為 bytes；非 Base64 的原文以 UTF-8 顯示 hex 並標示傳輸編碼未確認。**廠商 payload schema 尚未提供，內容只顯示原始資料，不解碼或推測座標**；既有 GPS 定位狀態仍來自 Hub 位置回報。無紀錄時明確顯示空狀態，Hub 封包計數不代表 cache 已有封包內容。
+
+在 TASA 主倉離線建置與檢查（不呼叫任何網路抓取腳本，也不需要帳密；公開鏡像僅同步建站所需檔案，不含檢查程式）：
+
+```sh
+python3 scripts/summarize_riot_passes.py
+python3 web/build_site.py
+sh web/check.sh
+uvx ruff check web/build_site.py web/test_build_site.py scripts/parse_fossa.py
+```
+
+檢查會在暫存目錄建立 FOSSA 測資與輸出，驗證 HTML escaping、CRC 失敗資料遮蔽、時間與排序、裝置歸屬、空狀態及完整建站；不改動真實 messages 或提交合成資料。
 
 ## 雲端部署
 
@@ -106,7 +124,7 @@ curl -fsS -X POST \
 gh workflow run dashboard.yml -R <owner>/<repo>
 ```
 
-完成後確認頁面有「FOSSA Nexus」與「鐳洋 vs FOSSA 對照」區塊。文件範例的 `hello world` payload 不是座標，會顯示 payload hex，但暫定座標為空，這是預期結果。
+完成後確認 FOSSA 網路與裝置頁的「封包內容」分頁。文件範例會顯示原始 `aGVsbG8gd29ybGQ=`、`hello world` 文字及 `68656c6c6f20776f726c64` hex；不會把 payload 解讀為座標。
 
 ## 部署到 Linux 內部伺服器
 

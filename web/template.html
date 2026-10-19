@@ -6,7 +6,7 @@
   <meta name="description" content="鐳洋 Node 與 FOSSA Nexus 衛星物聯網裝置儀表板：接收統計、位置、過境、裝置狀態與 IoT 訊息">
   <meta name="color-scheme" content="light dark">
   <title>TASA 衛星物聯網儀表板</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+  <style>$leaflet_css</style>
   <style>$css</style>
   <script>document.documentElement.classList.add("js");</script>
 </head>
@@ -29,7 +29,7 @@
       <p class="footer">內部研究資料 · 時間均為 UTC+8 · 鐳洋封包以 CRC-8 poly 0x31 驗證 · FOSSA 位置為 IoT Hub 回報之 GPS 定位 · 衛星影像 Esri World Imagery</p>
     </main>
   </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>$leaflet_js</script>
   <script>
   (function () {
     var views = Array.prototype.slice.call(document.querySelectorAll(".view"));

@@ -58,6 +58,10 @@ class FossaRecord:
     decode_status: str
     lat: Optional[float]
     lng: Optional[float]
+    message_text: str = ""
+    payload_text: str = ""
+    payload_encoding: str = ""
+    metadata_json: str = ""
 
 
 def optional_int(value: object) -> Optional[int]:
@@ -138,7 +142,22 @@ def parse_item(item: object) -> Optional[FossaRecord]:
         return None
     nested = item.get("body")
     body = nested if isinstance(nested, dict) else item
-    payload = decode_message(body.get("message"))
+    message = body.get("message")
+    if message is None:
+        message = body.get("payload")
+    message_text = message if isinstance(message, str) else json.dumps(message, ensure_ascii=False) if message is not None else ""
+    payload = decode_message(message)
+    raw_bytes = payload or message_text.encode("utf-8")
+    encoding = "Base64 傳輸還原（內容未解碼）" if payload else "原文 UTF-8（傳輸編碼未確認）"
+    metadata = {key: value for key, value in item.items() if key != "body"}
+    metadata_body = {key: value for key, value in body.items() if key not in {"message", "payload", "hub_raw"}}
+    hub_raw = body.get("hub_raw")
+    if isinstance(hub_raw, dict):
+        metadata_body["hub_raw"] = {key: value for key, value in hub_raw.items() if key not in {"message", "payload"}}
+    if isinstance(nested, dict):
+        metadata["body"] = metadata_body
+    else:
+        metadata = metadata_body
     latitude, longitude = decode_coordinates(payload)
     queue_unix = optional_int(body.get("queue_timestamp"))
     sat_unix = optional_int(body.get("sat_timestamp"))
@@ -157,11 +176,15 @@ def parse_item(item: object) -> Optional[FossaRecord]:
         sat_local=local_time(sat_unix),
         latency_s=latency,
         rssi=optional_float(body.get("rssi")),
-        payload_hex=payload.hex(),
-        payload_len=len(payload),
+        payload_hex=raw_bytes.hex(),
+        payload_len=len(raw_bytes),
         decode_status="provisional",
         lat=latitude,
         lng=longitude,
+        message_text=message_text,
+        payload_text=raw_bytes.decode("utf-8", errors="backslashreplace"),
+        payload_encoding=encoding if message_text else "無 payload",
+        metadata_json=json.dumps(metadata, ensure_ascii=False, sort_keys=True, indent=2),
     )
 
 
@@ -199,6 +222,10 @@ def record_as_dict(record: FossaRecord) -> Dict[str, object]:
         "lng": record.lng,
         "received_at_local": record.received_at_local,
         "key": record.key,
+        "message_text": record.message_text,
+        "payload_text": record.payload_text,
+        "payload_encoding": record.payload_encoding,
+        "metadata_json": record.metadata_json,
     }
 
 

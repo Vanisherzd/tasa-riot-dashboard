@@ -54,7 +54,7 @@ body {
 
 a { color: var(--accent); text-underline-offset: 0.2em; }
 a:hover { text-decoration-thickness: 2px; }
-a:focus-visible, button:focus-visible, .table-wrap:focus-visible, .chart-scroll:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+a:focus-visible, button:focus-visible, summary:focus-visible, .table-wrap:focus-visible, .chart-scroll:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .skip-link {
   position: fixed; inset-block-start: var(--s3); inset-inline-start: var(--s3); z-index: 50;
@@ -171,7 +171,7 @@ a.devlink:hover { border-color: var(--accent); background: color-mix(in srgb, va
 
 /* ---------------------------------------------------------------- panels, tables, charts */
 .panel { overflow: hidden; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); }
-.panel__head { display: flex; align-items: end; justify-content: space-between; gap: var(--s4); padding: var(--s3) var(--s4); border-block-end: 1px solid var(--line); }
+.panel__head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--s4); padding: var(--s3) var(--s4); border-block-end: 1px solid var(--line); }
 .panel__head h3 { margin: 0; font-size: 0.95rem; line-height: 1.4; }
 .panel__head p { max-inline-size: 70ch; margin: 0; color: var(--ink-muted); font-size: 0.78rem; }
 .panel__body { padding: var(--s4); }
@@ -210,6 +210,11 @@ tbody th { font-weight: 600; }
 .muted { color: var(--ink-muted); }
 .nowrap { white-space: nowrap; }
 .payload { max-inline-size: 52ch; overflow-wrap: anywhere; white-space: normal; }
+.packet-text { margin: 0; min-inline-size: 24ch; max-inline-size: 52ch; white-space: pre-wrap; overflow-wrap: anywhere; }
+.packet-pass { min-inline-size: 0; border-block-end: 1px solid var(--line); }
+.packet-pass:last-child { border-block-end: 0; }
+.packet-pass > summary { padding: var(--s3) var(--s4); cursor: pointer; font-family: var(--mono); font-size: 0.875rem; overflow-wrap: anywhere; }
+.packet-pass > summary:hover { background: var(--surface-raised); }
 .tag { display: inline-block; margin: 1px var(--s1) 1px 0; padding: 1px 6px; border: 1px solid var(--line); border-radius: var(--r-sm); font: 600 0.72rem/1.4 var(--mono); text-decoration: none; }
 
 .downloads { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr)); gap: 1px; background: var(--line); }
