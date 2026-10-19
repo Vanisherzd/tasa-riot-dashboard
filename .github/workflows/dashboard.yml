@@ -12,6 +12,8 @@ on:
       - "scripts/**"
       - "web/**"
       - "data/fossa/**"
+      - "data/tle/**"
+      - ".github/workflows/dashboard.yml"
 
 concurrency:
   group: dashboard-deploy
