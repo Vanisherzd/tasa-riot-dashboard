@@ -2,7 +2,7 @@ name: Deploy dashboard
 
 on:
   schedule:
-    - cron: "7 * * * *"
+    - cron: "7,37 * * * *"   # twice an hour: GitHub drops some scheduled runs under load
   workflow_dispatch:
   push:
     branches:
