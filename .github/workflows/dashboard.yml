@@ -46,6 +46,10 @@ jobs:
       - name: Fetch FOSSA hub status
         if: env.FOSSA_HUB_EMAIL != ''
         run: python3 scripts/fetch_fossa_hub.py
+      - name: Predict BLACK KITE-2 passes (CelesTrak TLE + SGP4)
+        run: |
+          python3 -m pip install --quiet sgp4
+          python3 scripts/predict_passes.py
       - name: Build dashboard
         run: python3 web/build_site.py
       - name: Upload dashboard artifact
