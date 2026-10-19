@@ -35,6 +35,7 @@ FOSSA_DIR: Final = ROOT / "data" / "fossa"
 FOSSA_MESSAGES: Final = FOSSA_DIR / "messages.jsonl"
 FOSSA_DEVICES: Final = FOSSA_DIR / "devices.json"
 FOSSA_SNAPSHOT: Final = FOSSA_DIR / "hub_snapshot.json"
+TLE_PASSES: Final = ROOT / "data" / "tle" / "passes.json"
 
 
 def _norm_mac(value: str) -> str:
@@ -270,6 +271,47 @@ def load_hub_snapshot(path: Path) -> List[Dict[str, object]]:
         raise DashboardDataError(f"無法讀取 {path}: {error}") from error
     links = raw.get("links") if isinstance(raw, dict) else None
     return [item for item in (links or []) if isinstance(item, dict)]
+
+
+def load_predicted_passes(path: Path) -> Dict[str, object]:
+    """BLACK KITE-2 passes computed by scripts/predict_passes.py; absent file = no prediction panel."""
+    if not path.exists():
+        return {}
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise DashboardDataError(f"無法讀取 {path}: {error}") from error
+    return raw if isinstance(raw, dict) else {}
+
+
+def upcoming_passes(pred: Dict[str, object], now: datetime) -> List[dict]:
+    cutoff = now.timestamp() - 600  # keep a pass that is in progress
+    return [p for p in pred.get("passes", []) if isinstance(p, dict) and float(p.get("tca_unix") or 0) > cutoff]
+
+
+def predicted_pass_list(pred: Dict[str, object], now: datetime, limit: int = 8) -> str:
+    if not pred:
+        return '<ul class="passlist"><li><span class="muted">尚未計算；執行 <code>scripts/predict_passes.py</code>（需 sgp4）。</span></li></ul>'
+    rows = "".join(
+        f'<li><span class="when">{escape(p["aos"][5:16])} → {escape(p["los"][11:16])}</span>'
+        f'<span class="mono">最大仰角 {p["max_el"]:.0f}° · 方位 {p["az_aos"]}°→{p["az_los"]}° · {p["duration_s"] // 60} 分</span>'
+        f'<span class="number">{"上行時段內" if p.get("in_uplink_window") else "非上行時段"}</span></li>'
+        for p in upcoming_passes(pred, now)[:limit]
+    ) or '<li><span class="muted">未來 48 小時沒有最大仰角 ≥ 5° 的過境。</span></li>'
+    age = pred.get("tle_age_h")
+    stale = isinstance(age, (int, float)) and age > 72
+    note = (f'<li><span class="muted">TLE epoch {escape(str(pred.get("tle_epoch", "—")))}（{escape(str(pred.get("source", "")))}）'
+            f'{"，已超過 3 天，誤差增大" if stale else ""}；觀測點 {escape(str((pred.get("site") or {}).get("name", "")))}；'
+            f'計算於 {escape(str(pred.get("generated_at", "—")))}</span></li>')
+    return f'<ul class="passlist">{rows}{note}</ul>'
+
+
+def next_pass_tile(pred: Dict[str, object], now: datetime) -> str:
+    items = upcoming_passes(pred, now)
+    if not items:
+        return "—"
+    p = items[0]
+    return f'{escape(p["aos"][5:16])} · {p["max_el"]:.0f}°' + ("" if p.get("in_uplink_window") else "（非上行時段）")
 
 
 def fossa_record_order(record: FossaRecord) -> Tuple[int, str]:
@@ -746,7 +788,7 @@ def riot_charts(passes: Sequence[PassRow], packets: Sequence[PacketRow]) -> str:
     )
 
 
-def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], devices: Sequence[DeviceStats]) -> str:
+def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], devices: Sequence[DeviceStats], predicted: Dict[str, object], now: datetime) -> str:
     decodable = sorted((r for r in packets if r.crc_ok), key=lambda r: (r.unix, r.pass_local), reverse=True)
     known = [d for d in devices if d.key != "other"]
     other = next((d for d in devices if d.key == "other"), None)
@@ -781,9 +823,10 @@ def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], d
             hubcard("裝置", "點選進入各裝置儀表板", f'<div class="devlist">{links}</div>'),
         )
         + grid2(
-            hubcard("最近過境", "鐳洋平台檔案清單；過境預報待接入 TLE 計算", riot_pass_list(passes)),
-            hubcard("訊號品質", "每場次封包數與可解碼數", f'<div class="chart chart--compact">{pass_chart(passes)}</div>'),
+            hubcard("下次過境預測", "BLACK KITE-2，TLE＋SGP4，未來 48 小時；韌體上行時段 01–04、13–16", predicted_pass_list(predicted, now)),
+            hubcard("最近過境", "鐳洋平台檔案清單（實際接收場次）", riot_pass_list(passes)),
         )
+        + hubcard("訊號品質", "每場次封包數與可解碼數", f'<div class="chart chart--compact">{pass_chart(passes)}</div>', wide=True)
         + hubcard("最近 IoT 訊息", "三個時間欄位與 FOSSA Hub 對齊：封包內 UnixTime、過境場次、平台檔取得時間",
                   riot_messages_table(decodable, "鐳洋最近 10 筆可解碼封包", 10), wide=True)
     )
@@ -1055,7 +1098,7 @@ def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], co
 
 
 # ---------------------------------------------------------------- overview / compare / downloads / nav
-def render_overview(passes, packets, devices, units, records, now: datetime) -> str:
+def render_overview(passes, packets, devices, units, records, predicted: Dict[str, object], now: datetime) -> str:
     decodable = sorted((r for r in packets if r.crc_ok), key=lambda r: (r.unix, r.pass_local), reverse=True)
     known = [d for d in devices if d.key != "other"]
     links = [u["link"] for u in units if u["link"]]
@@ -1093,6 +1136,7 @@ def render_overview(passes, packets, devices, units, records, now: datetime) -> 
         ("TCA 仰角／方位", f"{fmt_number(latest.tca_ele)}°／{fmt_number(latest.tca_azi)}°" if latest else "—"),
         ("最新一場封包／可解碼", f"{latest.n_packets}／{latest.n_crc_ok}" if latest else "—"),
         ("最近 24 小時", f"{len(recent)} 場 · {recent_ok} 包可解碼"),
+        ("下次過境預測（TLE）", next_pass_tile(predicted, now)),
     ])
     last_cell = max((float(l.get("last_cell_connection_ms") or 0) for l in links), default=0)
     next_pass = min((float(l.get("next_pass_s") or 0) for l in online), default=0)
@@ -1181,9 +1225,10 @@ def render_content(
 ) -> Tuple[str, str]:
     """Returns (sidebar nav html, main content html)."""
     units = fossa_units(load_hub_snapshot(FOSSA_SNAPSHOT), fossa_devices, fossa_records)
+    predicted = load_predicted_passes(TLE_PASSES)
     content = (
-        render_overview(passes, packets, devices, units, fossa_records, now)
-        + render_riot_views(passes, packets, devices)
+        render_overview(passes, packets, devices, units, fossa_records, predicted, now)
+        + render_riot_views(passes, packets, devices, predicted, now)
         + render_fossa_views(units, fossa_records, comparison)
         + render_compare(comparison)
         + render_downloads(summary_name, packets_name)
