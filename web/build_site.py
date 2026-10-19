@@ -949,6 +949,37 @@ def fossa_units(hub_links: Sequence[Dict[str, object]], devices: Sequence[FossaD
     return units
 
 
+def gps_fix(unit: dict) -> bool:
+    """The Hub position is the Nexus GPS fix reported over the cell link; factory coordinates do not count."""
+    return bool(unit.get("pos")) and in_taiwan(*unit["pos"])
+
+
+def gps_label(unit: dict) -> str:
+    if gps_fix(unit):
+        return '<span class="good">有定位</span>'
+    if unit.get("pos"):
+        return '<span class="muted">無（出廠測試座標）</span>'
+    return '<span class="muted">無回報</span>'
+
+
+def gps_time(link: Dict[str, object]) -> str:
+    return _hub_time(link.get("status_time_s"))
+
+
+def latest_gps_time(units: Sequence[dict]) -> str:
+    stamps = [float(u["link"].get("status_time_s") or 0) for u in units if u["link"] and gps_fix(u)]
+    return _hub_time(max(stamps)) if stamps else "—"
+
+
+def gps_status_list(units: Sequence[dict]) -> str:
+    rows = "".join(
+        f'<li><span class="when">{escape(gps_time(u["link"]))}</span><span class="mono"><a href="#fossa/{escape(u["serial"])}">{escape(u["serial"])}</a>'
+        f'{" · " + osm_link(*u["pos"], 5) if gps_fix(u) else ""}</span><span class="number">{gps_label(u)}</span></li>'
+        for u in units
+    ) or '<li><span class="muted">尚未登錄裝置。</span></li>'
+    return f'<ul class="passlist">{rows}</ul>'
+
+
 def fossa_messages_table(records: Sequence[FossaRecord], caption: str, limit: int) -> str:
     rows = []
     for record in records[:limit]:
@@ -1010,12 +1041,11 @@ def fossa_hub_table(units: Sequence[dict]) -> str:
             f'<td class="number">{_plain(link.get("link_resets"))}／{_plain(link.get("nexus_resets"))}</td>',
             f'<td class="mono">{escape(_hub_version(link.get("link_fw")))}／{escape(_hub_version(link.get("nexus_fw")))}</td>',
             f'<td class="mono">{escape(_hub_next_pass(link.get("next_pass_s")))}</td>',
-            f'<td class="mono">{escape(_hub_time(link.get("last_sat_packet_s")))}</td>',
-            f'<td class="number">{_plain(link.get("total_packets"))}</td>',
-            f'<td class="number">{len(unit["records"]):,}</td>',
+            f"<td>{gps_label(unit)}</td>",
+            f'<td class="mono">{escape(gps_time(link))}</td>',
         ))
     return render_table(
-        ("S/N", "狀態", "最後行動網路連線", "位置（最後回報）", "溫度／濕度", "重置 Link／Nexus", "韌體 Link／Nexus", "下次過境估計", "最後衛星封包", "IoT 封包累計", "本站訊息"),
+        ("S/N", "狀態", "最後行動網路連線", "位置（最後回報）", "溫度／濕度", "重置 Link／Nexus", "韌體 Link／Nexus", "下次過境估計", "GPS 定位", "GPS 回報時間"),
         rows,
         "FOSSA IoT Hub 裝置狀態",
     )
@@ -1024,12 +1054,11 @@ def fossa_hub_table(units: Sequence[dict]) -> str:
 def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], comparison: Sequence[DailyComparison]) -> str:
     links = [u["link"] for u in units if u["link"]]
     online = [l for l in links if l.get("active")]
-    hub_packets = sum(int(l.get("total_packets") or 0) for l in links)
-    hub_last_packet = max((float(l.get("last_packet_ms") or 0) for l in links), default=0)
     last_cell = max((float(l.get("last_cell_connection_ms") or 0) for l in links), default=0)
+    fixed = [u for u in units if gps_fix(u)]
     cards = render_cards([
-        (f"{hub_packets:,}", "IoT packages received（IoT Hub 累計）", ""),
-        (escape(_hub_time(hub_last_packet, millis=True)), "最後 IoT package（IoT Hub）", ""),
+        (f'{len(fixed)}<small> / {len(units)}</small>', "有 GPS 定位（Hub 位置回報）", "signal" if fixed else "warn"),
+        (escape(latest_gps_time(units)), "最後 GPS 位置回報", ""),
         (f'{len(online)}<small> / {len(units)}</small>', "上線裝置（IoT Hub）", "signal" if online else "warn"),
         (escape(_hub_time(last_cell, millis=True)), "最後行動網路連線", ""),
     ])
@@ -1041,7 +1070,7 @@ def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], co
     devlinks = "".join(
         devlink(f"#fossa/{u['serial']}", FOSSA_COLOR, escape(u["serial"]) + " " + pill("上線" if u["link"].get("active") else "未上線", bool(u["link"].get("active"))),
                 str(u["link"].get("link_mac") or (u["dev"].mac if u["dev"] else "")),
-                f'<span class="mono">{escape(_hub_time(u["link"].get("last_cell_connection_ms"), millis=True))}</span><small>最後行動網路連線 · IoT 封包 {_plain(u["link"].get("total_packets"))}</small>')
+                f'<span class="mono">{escape(_hub_time(u["link"].get("last_cell_connection_ms"), millis=True))}</span><small>最後行動網路連線 · GPS {"有定位" if gps_fix(u) else "無"}</small>')
         for u in units
     ) or '<p class="muted">尚未登錄裝置。</p>'
     passlist = "".join(
@@ -1056,27 +1085,24 @@ def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], co
             hubcard("裝置", "點選進入各裝置儀表板", f'<div class="devlist">{devlinks}</div>'),
         )
         + grid2(
+            hubcard("GPS 定位狀態", "本計畫只看各台是否有 GPS 定位：位置由 Nexus 的 GPS 經行動網路狀態回報", gps_status_list(units)),
             hubcard("下一次過境估計（IoT Hub）", f"Hub 依裝置最後位置計算，只對上線裝置更新；快照 {hub_snapshot_time(FOSSA_SNAPSHOT)}", f'<ul class="passlist">{passlist}</ul>'),
-            hubcard("每日訊息", "全部訊息與暫定有效座標", f'<div class="chart chart--compact">{fossa_daily_chart(comparison)}</div>'),
         )
-        + hubcard("最近 IoT 訊息", "欄位與 FOSSA Hub 一致：Queue（裝置排入）、衛星 RX、雲端 RX（Hub／Worker 取得）；座標為暫定解碼",
-                  fossa_messages_table(sorted(records, key=fossa_record_order, reverse=True), "FOSSA 最近 10 筆訊息", 10), wide=True)
     )
     out = [
         view_open("fossa", "FOSSA NETWORK · NEXUS", "FOSSA Nexus 網路",
-                  [("dash", "儀表板"), ("status", "裝置狀態表"), ("msgs", "IoT 訊息")],
-                  f"裝置狀態由 IoT Hub 以帳號權杖拉取（行動網路回報，每 300 s），快照時間 {hub_snapshot_time(FOSSA_SNAPSHOT)}；衛星 IoT 訊息經 Hub API 或 Integration webhook 取得。"),
+                  [("dash", "儀表板"), ("status", "裝置狀態表")],
+                  f"純 GPS 定位節點：只看各台有沒有 GPS 定位，不看 IoT 訊息內容。裝置狀態由 IoT Hub 以帳號權杖拉取（行動網路回報，每 300 s），快照時間 {hub_snapshot_time(FOSSA_SNAPSHOT)}。"),
         tabpanel("dash", dash),
-        tabpanel("status", panel("裝置狀態（IoT Hub）", "由 <code>scripts/fetch_fossa_hub.py</code> 拉取；本站訊息為經本儀表板收到的衛星 IoT 訊息筆數。", fossa_hub_table(units))),
-        tabpanel("msgs", panel("IoT 訊息", f"{len(records):,} 筆，顯示最近 200 筆。", fossa_messages_table(sorted(records, key=fossa_record_order, reverse=True), "FOSSA IoT 訊息", 200))),
+        tabpanel("status", panel("裝置狀態（IoT Hub）", "由 <code>scripts/fetch_fossa_hub.py</code> 拉取；GPS 定位以 Hub 回報位置是否為台灣境內之有效座標判定。", fossa_hub_table(units))),
         "</section>",
     ]
     for u in units:
         link, dev, serial = u["link"], u["dev"], u["serial"]
         title = f'{escape(serial)} {pill("上線" if link.get("active") else "未上線", bool(link.get("active")))} <span class="mono">{escape(str(link.get("link_mac") or (dev.mac if dev else "")))}</span>'
         cards = render_cards([
-            (_plain(link.get("total_packets")), "IoT packages received（IoT Hub）", ""),
-            (escape(_hub_time(link.get("last_packet_ms"), millis=True)), "最後 IoT package（IoT Hub）", ""),
+            (gps_label(u), "GPS 定位（Hub 位置回報）", "signal" if gps_fix(u) else "warn"),
+            (escape(gps_time(link)), "最後 GPS 位置回報", ""),
             (escape(_hub_next_pass(link.get("next_pass_s"))), "下次過境估計", ""),
             (escape(_hub_time(link.get("last_cell_connection_ms"), millis=True)), "最後行動網路連線", "signal" if link.get("active") else ""),
         ])
@@ -1091,9 +1117,7 @@ def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], co
         dash = (
             cards
             + grid2(hubcard("位置", map_note, map_div(pts, 17)), hubcard("主機狀態", "IoT Hub 最後狀態回報", fossa_host_tiles(link) if link else '<p class="muted">尚未拉取 IoT Hub 狀態。</p>'))
-            + hubcard("最近 IoT 訊息", "最近 10 筆", fossa_messages_table(u["records"], f"{serial} 最近訊息", 10), wide=True)
         )
-        integrations = link.get("integrations")
         config = render_tiles([
             ("裝置", "FOSSA Nexus（Link + Nexus modem）"),
             ("S/N", f'<span class="mono">{escape(serial)}</span>'),
@@ -1103,13 +1127,11 @@ def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], co
             ("名稱（Hub）", _plain(link.get("name"))),
             ("行動網路回報週期", _num(link.get("cell_period_s"), 0, " s")),
             ("僅衛星模式", "是" if link.get("force_only_sat") else ("否" if link else "—")),
-            ("Integrations（webhook）", f"{len(integrations)} 組" if isinstance(integrations, list) and integrations else ("無" if link else "—")),
-            ("IoT 命令累計", _plain(link.get("total_commands"))),
+            ("用途", "純 GPS 定位對照節點（不上傳感測 IoT 資料）"),
         ])
         out += [
-            view_open(f"fossa/{serial}", "FOSSA NEXUS · 裝置", title, [("dash", "儀表板"), ("msgs", "IoT 訊息"), ("config", "設定")]),
+            view_open(f"fossa/{serial}", "FOSSA NEXUS · 裝置", title, [("dash", "儀表板"), ("config", "設定")]),
             tabpanel("dash", dash),
-            tabpanel("msgs", panel("IoT 訊息", f"{len(u['records']):,} 筆，顯示最近 200 筆。", fossa_messages_table(u["records"], f"{serial} IoT 訊息", 200))),
             tabpanel("config", hubcard("設定", "對應 IoT Hub Configuration 分頁；資料來自 Hub 狀態快照與 devices.json", config, wide=True)),
             "</section>",
         ]
@@ -1122,11 +1144,11 @@ def render_overview(passes, packets, devices, units, records, predicted: Dict[st
     known = [d for d in devices if d.key != "other"]
     links = [u["link"] for u in units if u["link"]]
     online = [l for l in links if l.get("active")]
-    hub_packets = sum(int(l.get("total_packets") or 0) for l in links)
+    fixed = [u for u in units if gps_fix(u)]
     cards = render_cards([
         (f"{len(decodable):,}", "鐳洋可解碼 IoT 封包", ""),
         (escape(decodable[0].local) if decodable else "—", "鐳洋最後可解碼封包", ""),
-        (f"{hub_packets:,}", "FOSSA IoT packages received", ""),
+        (f'{len(fixed)}<small> / {len(units)}</small>', "FOSSA 有 GPS 定位", "signal" if fixed else "warn"),
         (f'{len(online)}<small> / {len(units)}</small>', "FOSSA 上線裝置", "signal" if online else "warn"),
     ])
     points = [
@@ -1142,7 +1164,7 @@ def render_overview(passes, packets, devices, units, records, predicted: Dict[st
     ) + "".join(
         devlink(f"#fossa/{u['serial']}", FOSSA_COLOR, escape(u["serial"]) + " " + pill("上線" if u["link"].get("active") else "未上線", bool(u["link"].get("active"))),
                 str(u["link"].get("link_mac") or (u["dev"].mac if u["dev"] else "")),
-                f'<span class="mono">{escape(_hub_time(u["link"].get("last_cell_connection_ms"), millis=True))}</span><small>FOSSA Nexus · 最後行動網路連線</small>')
+                f'<span class="mono">{escape(_hub_time(u["link"].get("last_cell_connection_ms"), millis=True))}</span><small>FOSSA Nexus · GPS {"有定位" if gps_fix(u) else "無"}</small>')
         for u in units
     )
     latest = passes[0] if passes else None
@@ -1162,7 +1184,7 @@ def render_overview(passes, packets, devices, units, records, predicted: Dict[st
     fossa_status = render_tiles([
         ("最後行動網路連線", escape(_hub_time(last_cell, millis=True))),
         ("上線裝置下次過境估計", escape(_hub_next_pass(next_pass))),
-        ("Hub IoT packages", f"{hub_packets:,}"),
+        ("最後 GPS 位置回報", escape(latest_gps_time(units))),
         ("Hub 狀態擷取", escape(hub_snapshot_time(FOSSA_SNAPSHOT))),
     ])
     body = (
@@ -1177,28 +1199,22 @@ def render_overview(passes, packets, devices, units, records, predicted: Dict[st
     return view_open("overview", "TASA · LEO IOT", "總覽", [], "兩條衛星物聯網鏈路的最新數字；左側選單進入各網路與各裝置。") + body + "</section>"
 
 
-def render_compare(comparison: Sequence[DailyComparison]) -> str:
+def render_compare(comparison: Sequence[DailyComparison], units: Sequence[dict]) -> str:
     rows = [
         (
             f'<th scope="row" class="mono">{escape(item.date)}</th>',
             f'<td class="number">{item.riot_total:,}</td>',
             f'<td class="number good">{item.riot_valid:,}</td>',
-            f'<td class="number">{item.fossa_total:,}</td>',
-            f'<td class="number good">{item.fossa_valid:,}</td>',
         )
         for item in reversed(comparison)
     ]
-    table = render_table(("日期", "鐳洋收到", "鐳洋可解碼", "FOSSA 收到", "FOSSA 暫定有效"), rows, "鐳洋與 FOSSA 每日接收對照")
-    chart = (
-        '<article class="panel chart"><div class="panel__body"><h3>每日接收量</h3><p class="legend">'
-        '<span><i></i>鐳洋收到</span><span><i class="ok"></i>鐳洋可解碼</span>'
-        '<span><i class="fossa"></i>FOSSA 收到</span><span><i class="fossa-valid"></i>FOSSA 暫定有效</span>'
-        f"</p>{comparison_chart(comparison)}</div></article>"
-    )
+    table = render_table(("日期", "鐳洋收到", "鐳洋可解碼"), rows, "鐳洋每日接收")
     return (
         view_open("compare", "CROSS-NETWORK", "鐳洋 vs FOSSA 對照", [],
-                  "鐳洋可解碼代表 CRC-8 通過；FOSSA 暫定有效代表暫定格式可解出合理座標，兩者定義不同。")
-        + chart + panel("每日對照表", "最新日期在上。", table) + "</section>"
+                  "鐳洋側看封包是否經衛星送達並可解碼（CRC-8）；FOSSA 側只看各台有沒有 GPS 定位。同址之 RSSI／SNR／送達率比較待兩側同址部署後建立。")
+        + hubcard("FOSSA GPS 定位狀態", "IoT Hub 最後位置回報", gps_status_list(units), wide=True)
+        + panel("鐳洋每日接收", "最新日期在上。", table)
+        + "</section>"
     )
 
 
@@ -1250,7 +1266,7 @@ def render_content(
         render_overview(passes, packets, devices, units, fossa_records, predicted, now)
         + render_riot_views(passes, packets, devices, predicted, now)
         + render_fossa_views(units, fossa_records, comparison)
-        + render_compare(comparison)
+        + render_compare(comparison, units)
         + render_downloads(summary_name, packets_name)
     )
     return render_nav(devices, units), content
