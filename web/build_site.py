@@ -47,7 +47,7 @@ KNOWN_DEVICES: Final = (
     ("cc000003", "登山改裝"),
     ("cc000005", "蚵棚"),
     ("cc000006", "本組第一塊 Node"),
-    ("cc000007", "不明"),
+    ("cc000007", "登山"),
 )
 
 
@@ -798,6 +798,13 @@ def riot_charts(passes: Sequence[PassRow], packets: Sequence[PacketRow]) -> str:
     )
 
 
+PREDICT_NOTE: Final = "BLACK KITE-2，鐳洋平台 TLE＋SGP4，未來 48 小時；觀測點清大校園（鐳洋測試點相差數秒）；韌體上行時段 01–04、13–16"
+
+
+def predicted_card(predicted: Dict[str, object], now: datetime, title: str = "下次過境預測", limit: int = 8, wide: bool = False) -> str:
+    return hubcard(title, PREDICT_NOTE, predicted_pass_list(predicted.get("riot") or {}, now, str(predicted.get("generated_at", "—")), limit), wide=wide)
+
+
 def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], devices: Sequence[DeviceStats], predicted: Dict[str, object], now: datetime) -> str:
     decodable = sorted((r for r in packets if r.crc_ok), key=lambda r: (r.unix, r.pass_local), reverse=True)
     known = [d for d in devices if d.key != "other"]
@@ -833,7 +840,7 @@ def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], d
             hubcard("裝置", "點選進入各裝置儀表板", f'<div class="devlist">{links}</div>'),
         )
         + grid2(
-            hubcard("下次過境預測", "BLACK KITE-2，TLE＋SGP4，未來 48 小時；韌體上行時段 01–04、13–16", predicted_pass_list(predicted.get("riot") or {}, now, str(predicted.get("generated_at", "—")))),
+            predicted_card(predicted, now),
             hubcard("最近過境", "鐳洋平台檔案清單（實際接收場次）", riot_pass_list(passes)),
         )
         + hubcard("訊號品質", "每場次封包數與可解碼數", f'<div class="chart chart--compact">{pass_chart(passes)}</div>', wide=True)
@@ -845,7 +852,7 @@ def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], d
                   [("dash", "儀表板"), ("passes", "過境"), ("quality", "訊號品質"), ("msgs", "IoT 訊息")],
                   "自製節點經 BLACK KITE-2 上行，鐳洋平台每場過境提供一個 UART 紀錄檔；每小時自動補抓並解析。"),
         tabpanel("dash", dash),
-        tabpanel("passes", panel("逐場次", f"{len(passes)} 場，最新在上；原始檔可直接下載。", riot_passes_table(passes, "逐場次資料"))),
+        tabpanel("passes", predicted_card(predicted, now, "未來 48 小時過境預測", 12, wide=True) + panel("逐場次（實際接收）", f"{len(passes)} 場，最新在上；原始檔可直接下載。", riot_passes_table(passes, "逐場次資料"))),
         tabpanel("quality", riot_charts(passes, packets)),
         tabpanel("msgs", panel("IoT 訊息", f"{len(decodable):,} 筆可解碼封包，顯示最近 200 筆。", riot_messages_table(decodable, "鐳洋可解碼封包", 200))),
         "</section>",
@@ -882,6 +889,7 @@ def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], d
             ("最後 RSSI／SNR", f"{last.rssi:.1f}／{last.snr:.1f} dB" if last else "—"),
             ("封包長度", f"{last.size} B" if last else "—"),
             ("最後過境場次", escape(last.pass_local) if last else "—"),
+            ("下次過境（預測）", next_pass_tile(predicted.get("riot") or {}, now)),
             ("最後平台檔", f'<a href="raw/{quote(last.file)}" download>{escape(last.file)}</a>' if last else "—"),
             ("可解碼比例", f"{len(mine) / len(mine_all):.0%}" if mine_all else "—"),
         ])
@@ -891,6 +899,7 @@ def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], d
                 hubcard("位置", "大點為最後可解碼封包位置，小點為先前位置", map_div(pts, 17)),
                 hubcard("裝置狀態", "採最新可解碼封包", status),
             )
+            + predicted_card(predicted, now, "下次過境預測", 5, wide=True)
             + hubcard("最近 IoT 訊息", "最近 10 筆可解碼封包", riot_messages_table(mine, f"{d.key} 最近封包", 10), wide=True)
         )
         config = render_tiles([
@@ -905,7 +914,7 @@ def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], d
             view_open(f"riot/{d.key}", "鐳洋 NODE · 裝置", title, [("dash", "儀表板"), ("msgs", "IoT 訊息"), ("passes", "過境"), ("config", "設定")]),
             tabpanel("dash", dash),
             tabpanel("msgs", panel("IoT 訊息", f"{len(mine):,} 筆可解碼封包，顯示最近 200 筆。", riot_messages_table(mine, f"{d.key} 可解碼封包", 200))),
-            tabpanel("passes", panel("過境", f"此裝置出現在 {len(my_passes)} 場過境。", riot_passes_table(my_passes, f"{d.key} 過境"))),
+            tabpanel("passes", predicted_card(predicted, now, "未來 48 小時過境預測", 12, wide=True) + panel("過境（實際接收）", f"此裝置出現在 {len(my_passes)} 場過境。", riot_passes_table(my_passes, f"{d.key} 過境"))),
             tabpanel("config", hubcard("設定", "裝置登錄資訊（靜態）", config, wide=True)),
             "</section>",
         ]
@@ -1012,7 +1021,7 @@ def fossa_hub_table(units: Sequence[dict]) -> str:
     )
 
 
-def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], comparison: Sequence[DailyComparison], predicted: Dict[str, object], now: datetime) -> str:
+def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], comparison: Sequence[DailyComparison]) -> str:
     links = [u["link"] for u in units if u["link"]]
     online = [l for l in links if l.get("active")]
     hub_packets = sum(int(l.get("total_packets") or 0) for l in links)
@@ -1048,9 +1057,8 @@ def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], co
         )
         + grid2(
             hubcard("下一次過境估計（IoT Hub）", f"Hub 依裝置最後位置計算，只對上線裝置更新；快照 {hub_snapshot_time(FOSSA_SNAPSHOT)}", f'<ul class="passlist">{passlist}</ul>'),
-            hubcard("下次過境預測（TLE）", "FOSSASAT-2E 星系，CelesTrak TLE＋SGP4，未來 48 小時；Hub 估計與其中最早一顆吻合", predicted_pass_list(predicted.get("fossa") or {}, now, str(predicted.get("generated_at", "—")))),
+            hubcard("每日訊息", "全部訊息與暫定有效座標", f'<div class="chart chart--compact">{fossa_daily_chart(comparison)}</div>'),
         )
-        + hubcard("每日訊息", "全部訊息與暫定有效座標", f'<div class="chart chart--compact">{fossa_daily_chart(comparison)}</div>', wide=True)
         + hubcard("最近 IoT 訊息", "欄位與 FOSSA Hub 一致：Queue（裝置排入）、衛星 RX、雲端 RX（Hub／Worker 取得）；座標為暫定解碼",
                   fossa_messages_table(sorted(records, key=fossa_record_order, reverse=True), "FOSSA 最近 10 筆訊息", 10), wide=True)
     )
@@ -1155,11 +1163,11 @@ def render_overview(passes, packets, devices, units, records, predicted: Dict[st
         ("最後行動網路連線", escape(_hub_time(last_cell, millis=True))),
         ("上線裝置下次過境估計", escape(_hub_next_pass(next_pass))),
         ("Hub IoT packages", f"{hub_packets:,}"),
-        ("下次過境預測（TLE）", next_pass_tile(predicted.get("fossa") or {}, now)),
         ("Hub 狀態擷取", escape(hub_snapshot_time(FOSSA_SNAPSHOT))),
     ])
     body = (
         cards
+        + predicted_card(predicted, now, "BLACK KITE-2 下次過境預測（鐳洋 Node）", 5, wide=True)
         + grid2(
             hubcard("位置", "兩個網路所有裝置的最後位置（綠：鐳洋 Node，橘：FOSSA Nexus）", map_div(points, 15)),
             hubcard("裝置", "點選進入各裝置儀表板", f'<div class="devlist">{devlinks}</div>'),
@@ -1241,7 +1249,7 @@ def render_content(
     content = (
         render_overview(passes, packets, devices, units, fossa_records, predicted, now)
         + render_riot_views(passes, packets, devices, predicted, now)
-        + render_fossa_views(units, fossa_records, comparison, predicted, now)
+        + render_fossa_views(units, fossa_records, comparison)
         + render_compare(comparison)
         + render_downloads(summary_name, packets_name)
     )

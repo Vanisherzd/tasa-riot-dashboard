@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""Predict satellite passes over the two node sites with SGP4, for both networks.
+"""Predict BLACK KITE-2 passes over the Node site with SGP4 (TLE from the 鐳洋 platform /api/tle, CelesTrak fallback).
 
-  riot  : BLACK KITE-2 over 清大校園, TLE from the 鐳洋 platform /api/tle (CelesTrak fallback)
-  fossa : every FOSSASAT-2E on CelesTrak over the 鐳洋 rooftop where the online Nexus sits
+FOSSA is not predicted here: the FOSSA IoT Hub already shows its own next-pass estimate.
 
   python3 scripts/predict_passes.py                 # fetch TLEs, write data/tle/*.tle + data/tle/passes.json
   python3 scripts/predict_passes.py --offline       # reuse the cached TLEs (no network)
@@ -32,7 +31,7 @@ STEP_S = 5
 WGS84_A = 6378.137
 WGS84_F = 1 / 298.257223563
 
-# ponytail: fixed sites; move to a config file once nodes are deployed at the field sites.
+# ponytail: one fixed site (all current nodes are within 10 km, passes differ by seconds); make it a config once deployed.
 TARGETS = {
     "riot": {
         "label": "BLACK KITE-2",
@@ -42,14 +41,6 @@ TARGETS = {
         "cache": Path("data/tle/black_kite_2.tle"),
         "site": {"name": "清大校園", "lat": 24.79385, "lng": 120.99454, "alt_m": 60.0},  # cc000006 last fix
         "uplink_windows": UPLINK_WINDOWS,
-    },
-    "fossa": {
-        "label": "FOSSASAT-2E 星系",
-        "match": lambda name, norad: name.upper().startswith("FOSSASA"),  # CelesTrak spells one "FOSSASA-2E23"
-        "sources": (("CelesTrak", "https://celestrak.org/NORAD/elements/gp.php?NAME=FOSSA&FORMAT=tle"),),
-        "cache": Path("data/tle/fossasat.tle"),
-        "site": {"name": "鐳洋測試點", "lat": 24.76069, "lng": 121.06559, "alt_m": 50.0},  # online Nexus Hub position
-        "uplink_windows": None,
     },
 }
 
@@ -213,7 +204,7 @@ def predict_target(key: str, target: dict, start: datetime, hours: float, now: d
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="以 TLE 預測 BLACK KITE-2 與 FOSSASAT-2E 過境時間")
+    ap = argparse.ArgumentParser(description="以 TLE 預測 BLACK KITE-2 過境時間")
     ap.add_argument("--offline", action="store_true", help="不連網，使用快取 TLE")
     ap.add_argument("--start", help="起算時間（本地 UTC+8，ISO），預設現在")
     ap.add_argument("--hours", type=float, default=48.0)
