@@ -1,5 +1,5 @@
 {
- "fetched_at": 1792335235.704161,
+ "fetched_at": 1792393274.609163,
  "links": [
   {
    "link_id": "6a044317b70852b155210501",
@@ -58,17 +58,17 @@
    "nexus_mac": "98A316039C3C",
    "name": "NEXUS 1.0",
    "active": true,
-   "last_cell_connection_ms": 1792335192541,
-   "status_time_s": 1792335180,
-   "elapsed_s": 126751,
+   "last_cell_connection_ms": 1792392970092,
+   "status_time_s": 1792392947,
+   "elapsed_s": 184137,
    "position": {
-    "alt": 151.33,
-    "lat": 24.760689,
-    "lng": 121.06559
+    "alt": 142.466,
+    "lat": 24.760702,
+    "lng": 121.06554
    },
-   "next_pass_s": 1792335740,
+   "next_pass_s": 1792415777,
    "last_sat_packet_s": 0,
-   "rx_packet_count": 1,
+   "rx_packet_count": 6,
    "tx_queue_len": 0,
    "link_resets": 8,
    "link_fw": {
@@ -79,8 +79,8 @@
    "total_packets": 2,
    "last_packet_ms": 1791295831200,
    "total_commands": 29,
-   "temperature_c": 33.26467,
-   "humidity_pct": 48.783703,
+   "temperature_c": 40.741585,
+   "humidity_pct": 48.94583,
    "nexus_resets": 10,
    "nexus_fw": {
     "major": 5,
@@ -90,12 +90,12 @@
    "power": {
     "battVolt": 0,
     "bus3Volt": 3310,
-    "bus5Volt": 4955,
+    "bus5Volt": 4937,
     "ext4201": 0,
     "ext4202": 0,
-    "extAdc1": 1314,
-    "extAdc2": 1349,
-    "extAdc3": 1880
+    "extAdc1": 1444,
+    "extAdc2": 1474,
+    "extAdc3": 2034
    },
    "cell_period_s": 300,
    "force_only_sat": false,

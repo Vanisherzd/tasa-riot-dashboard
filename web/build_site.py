@@ -605,6 +605,26 @@ def _hub_time(value: object, millis: bool = False) -> str:
     return moment.strftime("%Y-%m-%d %H:%M:%S")
 
 
+def _hub_next_pass(value: object) -> str:
+    """Next pass from the Hub snapshot; flag it once it is in the past so a stale snapshot is visible."""
+    text = _hub_time(value)
+    try:
+        if text != "—" and float(value) < datetime.now(TAIPEI).timestamp():  # type: ignore[arg-type]
+            return text + "（已過，待 Hub 更新）"
+    except (TypeError, ValueError):
+        pass
+    return text
+
+
+def hub_snapshot_time(path: Path) -> str:
+    """When scripts/fetch_fossa_hub.py last pulled the Hub; shown so a stale snapshot is obvious."""
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return "—"
+    return _hub_time(raw.get("fetched_at")) if isinstance(raw, dict) else "—"
+
+
 def _hub_version(value: object) -> str:
     if isinstance(value, dict):
         return ".".join(str(value.get(key, 0)) for key in ("major", "minor", "patch"))
@@ -908,7 +928,7 @@ def fossa_host_tiles(link: Dict[str, object]) -> str:
         ("衛星 RX 封包計數", _plain(link.get("rx_packet_count"))),
         ("TX 佇列", _plain(link.get("tx_queue_len"))),
         ("最後衛星接收", escape(_hub_time(link.get("last_sat_packet_s")))),
-        ("下次過境估計", escape(_hub_time(link.get("next_pass_s")))),
+        ("下次過境估計", escape(_hub_next_pass(link.get("next_pass_s")))),
     ])
 
 
@@ -927,7 +947,7 @@ def fossa_hub_table(units: Sequence[dict]) -> str:
             f'<td>{_num(link.get("temperature_c"), 1, " °C")}／{_num(link.get("humidity_pct"), 0, " %")}</td>',
             f'<td class="number">{_plain(link.get("link_resets"))}／{_plain(link.get("nexus_resets"))}</td>',
             f'<td class="mono">{escape(_hub_version(link.get("link_fw")))}／{escape(_hub_version(link.get("nexus_fw")))}</td>',
-            f'<td class="mono">{escape(_hub_time(link.get("next_pass_s")))}</td>',
+            f'<td class="mono">{escape(_hub_next_pass(link.get("next_pass_s")))}</td>',
             f'<td class="mono">{escape(_hub_time(link.get("last_sat_packet_s")))}</td>',
             f'<td class="number">{_plain(link.get("total_packets"))}</td>',
             f'<td class="number">{len(unit["records"]):,}</td>',
@@ -963,7 +983,7 @@ def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], co
         for u in units
     ) or '<p class="muted">尚未登錄裝置。</p>'
     passlist = "".join(
-        f'<li><span class="when">{escape(_hub_time(u["link"].get("next_pass_s")))}</span><span class="mono">{escape(u["serial"])}</span>'
+        f'<li><span class="when">{escape(_hub_next_pass(u["link"].get("next_pass_s")))}</span><span class="mono">{escape(u["serial"])}</span>'
         f'<span class="number">{"最後衛星封包 " + _hub_time(u["link"].get("last_sat_packet_s")) if u["link"].get("last_sat_packet_s") else "尚無衛星封包"}</span></li>'
         for u in units if u["link"]
     ) or '<li><span class="muted">尚未拉取 IoT Hub 狀態；設定 FOSSA_HUB_EMAIL／FOSSA_HUB_PASSWORD 後由排程自動更新。</span></li>'
@@ -974,7 +994,7 @@ def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], co
             hubcard("裝置", "點選進入各裝置儀表板", f'<div class="devlist">{devlinks}</div>'),
         )
         + grid2(
-            hubcard("下一次過境估計", "IoT Hub 依裝置最後位置計算", f'<ul class="passlist">{passlist}</ul>'),
+            hubcard("下一次過境估計", f"IoT Hub 依裝置最後位置計算；快照 {hub_snapshot_time(FOSSA_SNAPSHOT)}", f'<ul class="passlist">{passlist}</ul>'),
             hubcard("每日訊息", "全部訊息與暫定有效座標", f'<div class="chart chart--compact">{fossa_daily_chart(comparison)}</div>'),
         )
         + hubcard("最近 IoT 訊息", "欄位與 FOSSA Hub 一致：Queue（裝置排入）、衛星 RX、雲端 RX（Hub／Worker 取得）；座標為暫定解碼",
@@ -983,7 +1003,7 @@ def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], co
     out = [
         view_open("fossa", "FOSSA NETWORK · NEXUS", "FOSSA Nexus 網路",
                   [("dash", "儀表板"), ("status", "裝置狀態表"), ("msgs", "IoT 訊息")],
-                  "裝置狀態由 IoT Hub 以帳號權杖拉取（行動網路回報，每 300 s）；衛星 IoT 訊息經 Hub API 或 Integration webhook 取得。"),
+                  f"裝置狀態由 IoT Hub 以帳號權杖拉取（行動網路回報，每 300 s），快照時間 {hub_snapshot_time(FOSSA_SNAPSHOT)}；衛星 IoT 訊息經 Hub API 或 Integration webhook 取得。"),
         tabpanel("dash", dash),
         tabpanel("status", panel("裝置狀態（IoT Hub）", "由 <code>scripts/fetch_fossa_hub.py</code> 拉取；本站訊息為經本儀表板收到的衛星 IoT 訊息筆數。", fossa_hub_table(units))),
         tabpanel("msgs", panel("IoT 訊息", f"{len(records):,} 筆，顯示最近 200 筆。", fossa_messages_table(sorted(records, key=fossa_record_order, reverse=True), "FOSSA IoT 訊息", 200))),
@@ -995,7 +1015,7 @@ def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], co
         cards = render_cards([
             (_plain(link.get("total_packets")), "IoT packages received（IoT Hub）", ""),
             (escape(_hub_time(link.get("last_packet_ms"), millis=True)), "最後 IoT package（IoT Hub）", ""),
-            (escape(_hub_time(link.get("next_pass_s"))), "下次過境估計", ""),
+            (escape(_hub_next_pass(link.get("next_pass_s"))), "下次過境估計", ""),
             (escape(_hub_time(link.get("last_cell_connection_ms"), millis=True)), "最後行動網路連線", "signal" if link.get("active") else ""),
         ])
         pts = []
@@ -1078,9 +1098,9 @@ def render_overview(passes, packets, devices, units, records, now: datetime) -> 
     next_pass = min((float(l.get("next_pass_s") or 0) for l in online), default=0)
     fossa_status = render_tiles([
         ("最後行動網路連線", escape(_hub_time(last_cell, millis=True))),
-        ("上線裝置下次過境估計", escape(_hub_time(next_pass))),
-        ("本站衛星 IoT 訊息", f"{len(records):,} 筆"),
+        ("上線裝置下次過境估計", escape(_hub_next_pass(next_pass))),
         ("Hub IoT packages", f"{hub_packets:,}"),
+        ("Hub 狀態擷取", escape(hub_snapshot_time(FOSSA_SNAPSHOT))),
     ])
     body = (
         cards
