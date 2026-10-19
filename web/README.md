@@ -7,7 +7,7 @@
 鐳洋與 FOSSA 的網路頁、每個裝置頁都有「封包內容」分頁；儀表板另顯示最近十包預覽。所有時間為 UTC+8，寬表格可在自己的區域內水平捲動。
 
 - **鐳洋（BK-2 M9）**：讀取 `summarize_riot_passes.py` 產生的逐封包 CSV，依過境時間、原始檔與 UART 行號倒序排列，完整保留所有封包。每場使用原生 `<details>`，預設展開最近兩場。接收／過境時間是場次時窗，來源沒有逐包接收時刻；封包內 UnixTime 另列。每列顯示 CRC-8 結果、RSSI／SNR 與完整 raw hex。只有 CRC 通過才顯示裝置地址、座標、Unix 轉換時間與電池電壓；CRC 失敗的解碼值標示不可信並隱藏。裝置頁的 CRC 失敗封包僅依收到的地址 bytes 暫列，歸屬未驗證；地址損壞的封包仍可在網路頁找到。
-- **FOSSA Nexus**：讀取本機或 Actions cache 還原的 `data/fossa/messages.jsonl`（`packet_to_record` 格式），顯示原始 message/payload、傳輸 bytes 的文字與 hex、Link／裝置名稱，以及完整 metadata（含 RSSI／SNR、衛星等可用欄位）。Base64 字串還原為 bytes；非 Base64 的原文以 UTF-8 顯示 hex 並標示傳輸編碼未確認。**廠商 payload schema 尚未提供，內容只顯示原始資料，不解碼或推測座標**；既有 GPS 定位狀態仍來自 Hub 位置回報。無紀錄時明確顯示空狀態，Hub 封包計數不代表 cache 已有封包內容。
+- **FOSSA Nexus**：讀取本機或 Actions cache 還原的 `data/fossa/messages.jsonl`（`packet_to_record` 格式），顯示原始 message/payload、傳輸 bytes 的文字與 hex、Link／裝置名稱，以及完整 metadata（含 RSSI／SNR、衛星等可用欄位）。Base64 字串還原為 bytes；非 Base64 的原文以 UTF-8 顯示 hex 並標示傳輸編碼未確認。**硬解碼**（`scripts/parse_fossa.py::decode_payload`）：可讀文字直接顯示；前 12 bytes 為合理 float32 lat/lng/alt（Hub Kaitai 範例格式，先 LE 再 BE）則解為 GPS 並畫到 FOSSA 地圖；其餘只給 hex。廠商正式 frame 格式到了只需改 `GPS_LAYOUTS`／`GPS_RANGE`。Hub 行動網路回報的 GPS 定位狀態另算。無紀錄時明確顯示空狀態，Hub 封包計數不代表 cache 已有封包內容。
 
 在 TASA 主倉離線建置與檢查（不呼叫任何網路抓取腳本，也不需要帳密；公開鏡像僅同步建站所需檔案，不含檢查程式）：
 

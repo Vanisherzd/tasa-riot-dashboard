@@ -1027,7 +1027,16 @@ def fossa_messages_table(records: Sequence[FossaRecord], caption: str, units: Se
         ))
     if not rows:
         return '<div class="empty"><p>尚無 FOSSA 封包內容：本機 messages.jsonl 為空或不存在；建站需先還原 Actions cache 或匯入匯出紀錄。Hub 計數不代表本機已有封包內容。</p></div>'
-    return render_table(("時間（UTC+8）", "Link／裝置名稱", "原始 message / payload", "Payload 文字（未解碼）", "Payload hex", "Metadata（原始紀錄）", "Queue（UTC+8）", "衛星 RX（UTC+8）", "雲端 RX（UTC+8）"), rows, caption)
+    return render_table(("時間（UTC+8）", "Link／裝置名稱", "原始 message / payload", "解碼結果", "解碼方式／Payload hex", "Metadata（原始紀錄）", "Queue（UTC+8）", "衛星 RX（UTC+8）", "雲端 RX（UTC+8）"), rows, caption)
+
+
+def fossa_gps_points(records: Sequence[FossaRecord], serial: str) -> List[dict]:
+    """封包硬解碼出的 GPS（衛星／地面網路送來的 payload），與 Hub 行動網路回報位置分開畫。"""
+    return [
+        map_point(r.lat, r.lng, serial, FOSSA_COLOR, f"<b>{escape(serial)} 封包 GPS</b><br>{escape(r.sat_local or r.received_at_local or r.queue_local or '')}<br>{r.lat:.6f}, {r.lng:.6f}",
+                  radius=4, opacity=0.55)
+        for r in records if plausible(r.lat, r.lng)
+    ]
 
 
 def _power(value: object) -> str:
@@ -1083,7 +1092,9 @@ def fossa_hub_table(units: Sequence[dict]) -> str:
 
 
 def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], comparison: Sequence[DailyComparison]) -> str:
-    raw_note = "廠商尚未提供 payload schema；以下僅顯示原始內容與傳輸 bytes，不解碼內容或推測座標。時間為衛星 RX，缺少時依序採雲端 RX、Queue（UTC+8）。"
+    raw_note = ("硬解碼：Base64 還原 bytes 後，可讀文字（UART／Wi-Fi 餵入的 16／32 bytes ASCII）直接顯示；"
+                "前 12 bytes 為合理 float32 lat/lng/alt（Hub Kaitai 範例格式）則解為 GPS 並畫到地圖；其餘只給 hex。"
+                "廠商正式 frame 格式尚未提供，GPS 欄位為暫定。時間為衛星 RX，缺少時依序採雲端 RX、Queue（UTC+8）。")
     links = [u["link"] for u in units if u["link"]]
     online = [link for link in links if link.get("active")]
     last_cell = max((float(link.get("last_cell_connection_ms") or 0) for link in links), default=0)
@@ -1099,6 +1110,8 @@ def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], co
                   f"<b>{escape(u['serial'])}</b><br>{escape(_hub_time(u['link'].get('last_cell_connection_ms'), millis=True))}")
         for u in units if u["pos"] and in_taiwan(*u["pos"])
     ]
+    for u in units:
+        points += fossa_gps_points(u["records"], u["serial"])
     devlinks = "".join(
         devlink(f"#fossa/{u['serial']}", FOSSA_COLOR, escape(u["serial"]) + " " + pill("上線" if u["link"].get("active") else "未上線", bool(u["link"].get("active"))),
                 str(u["link"].get("link_mac") or (u["dev"].mac if u["dev"] else "")),
@@ -1148,6 +1161,7 @@ def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], co
             map_note = f"Hub 僅有出廠測試座標 {u['pos'][0]:.5f}, {u['pos'][1]:.5f}，裝置上線後更新"
         else:
             map_note = "Hub 尚無位置回報"
+        pts += fossa_gps_points(u["records"], serial)
         dash = (
             cards
             + grid2(hubcard("位置", map_note, map_div(pts, 17)), hubcard("主機狀態", "IoT Hub 最後狀態回報", fossa_host_tiles(link) if link else '<p class="muted">尚未拉取 IoT Hub 狀態。</p>'))
