@@ -289,20 +289,29 @@ def upcoming_passes(pred: Dict[str, object], now: datetime) -> List[dict]:
     return [p for p in pred.get("passes", []) if isinstance(p, dict) and float(p.get("tca_unix") or 0) > cutoff]
 
 
-def predicted_pass_list(pred: Dict[str, object], now: datetime, limit: int = 8) -> str:
+def _pass_flag(p: dict, pred: Dict[str, object]) -> str:
+    """Right-hand label: uplink window for the Node (fixed TX hours), satellite name for a constellation."""
+    if pred.get("uplink_windows"):
+        return "上行時段內" if p.get("in_uplink_window") else "非上行時段"
+    return escape(str(p.get("sat") or ""))
+
+
+def predicted_pass_list(pred: Dict[str, object], now: datetime, generated_at: str, limit: int = 8) -> str:
     if not pred:
         return '<ul class="passlist"><li><span class="muted">尚未計算；執行 <code>scripts/predict_passes.py</code>（需 sgp4）。</span></li></ul>'
     rows = "".join(
         f'<li><span class="when">{escape(p["aos"][5:16])} → {escape(p["los"][11:16])}</span>'
         f'<span class="mono">最大仰角 {p["max_el"]:.0f}° · 方位 {p["az_aos"]}°→{p["az_los"]}° · {p["duration_s"] // 60} 分</span>'
-        f'<span class="number">{"上行時段內" if p.get("in_uplink_window") else "非上行時段"}</span></li>'
+        f'<span class="number">{_pass_flag(p, pred)}</span></li>'
         for p in upcoming_passes(pred, now)[:limit]
     ) or '<li><span class="muted">未來 48 小時沒有最大仰角 ≥ 5° 的過境。</span></li>'
     age = pred.get("tle_age_h")
     stale = isinstance(age, (int, float)) and age > 72
-    note = (f'<li><span class="muted">TLE epoch {escape(str(pred.get("tle_epoch", "—")))}（{escape(str(pred.get("source", "")))}）'
-            f'{"，已超過 3 天，誤差增大" if stale else ""}；觀測點 {escape(str((pred.get("site") or {}).get("name", "")))}；'
-            f'計算於 {escape(str(pred.get("generated_at", "—")))}</span></li>')
+    sats = pred.get("satellites") or []
+    who = f'{len(sats)} 顆：{escape("、".join(str(s) for s in sats))}；' if len(sats) > 1 else ""
+    note = (f'<li><span class="muted">{who}TLE epoch {escape(str(pred.get("tle_epoch", "—")))}（{escape(str(pred.get("source", "")))}）'
+            f'{"，最舊元素已超過 3 天，誤差增大" if stale else ""}；觀測點 {escape(str((pred.get("site") or {}).get("name", "")))}；'
+            f'計算於 {escape(generated_at)}</span></li>')
     return f'<ul class="passlist">{rows}{note}</ul>'
 
 
@@ -311,7 +320,8 @@ def next_pass_tile(pred: Dict[str, object], now: datetime) -> str:
     if not items:
         return "—"
     p = items[0]
-    return f'{escape(p["aos"][5:16])} · {p["max_el"]:.0f}°' + ("" if p.get("in_uplink_window") else "（非上行時段）")
+    tail = ("" if p.get("in_uplink_window") else "（非上行時段）") if pred.get("uplink_windows") else f' · {escape(str(p.get("sat") or ""))}'
+    return f'{escape(p["aos"][5:16])} · {p["max_el"]:.0f}°{tail}'
 
 
 def fossa_record_order(record: FossaRecord) -> Tuple[int, str]:
@@ -823,7 +833,7 @@ def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], d
             hubcard("裝置", "點選進入各裝置儀表板", f'<div class="devlist">{links}</div>'),
         )
         + grid2(
-            hubcard("下次過境預測", "BLACK KITE-2，TLE＋SGP4，未來 48 小時；韌體上行時段 01–04、13–16", predicted_pass_list(predicted, now)),
+            hubcard("下次過境預測", "BLACK KITE-2，TLE＋SGP4，未來 48 小時；韌體上行時段 01–04、13–16", predicted_pass_list(predicted.get("riot") or {}, now, str(predicted.get("generated_at", "—")))),
             hubcard("最近過境", "鐳洋平台檔案清單（實際接收場次）", riot_pass_list(passes)),
         )
         + hubcard("訊號品質", "每場次封包數與可解碼數", f'<div class="chart chart--compact">{pass_chart(passes)}</div>', wide=True)
@@ -1002,7 +1012,7 @@ def fossa_hub_table(units: Sequence[dict]) -> str:
     )
 
 
-def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], comparison: Sequence[DailyComparison]) -> str:
+def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], comparison: Sequence[DailyComparison], predicted: Dict[str, object], now: datetime) -> str:
     links = [u["link"] for u in units if u["link"]]
     online = [l for l in links if l.get("active")]
     hub_packets = sum(int(l.get("total_packets") or 0) for l in links)
@@ -1037,9 +1047,10 @@ def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], co
             hubcard("裝置", "點選進入各裝置儀表板", f'<div class="devlist">{devlinks}</div>'),
         )
         + grid2(
-            hubcard("下一次過境估計", f"IoT Hub 依裝置最後位置計算；快照 {hub_snapshot_time(FOSSA_SNAPSHOT)}", f'<ul class="passlist">{passlist}</ul>'),
-            hubcard("每日訊息", "全部訊息與暫定有效座標", f'<div class="chart chart--compact">{fossa_daily_chart(comparison)}</div>'),
+            hubcard("下一次過境估計（IoT Hub）", f"Hub 依裝置最後位置計算，只對上線裝置更新；快照 {hub_snapshot_time(FOSSA_SNAPSHOT)}", f'<ul class="passlist">{passlist}</ul>'),
+            hubcard("下次過境預測（TLE）", "FOSSASAT-2E 星系，CelesTrak TLE＋SGP4，未來 48 小時；Hub 估計與其中最早一顆吻合", predicted_pass_list(predicted.get("fossa") or {}, now, str(predicted.get("generated_at", "—")))),
         )
+        + hubcard("每日訊息", "全部訊息與暫定有效座標", f'<div class="chart chart--compact">{fossa_daily_chart(comparison)}</div>', wide=True)
         + hubcard("最近 IoT 訊息", "欄位與 FOSSA Hub 一致：Queue（裝置排入）、衛星 RX、雲端 RX（Hub／Worker 取得）；座標為暫定解碼",
                   fossa_messages_table(sorted(records, key=fossa_record_order, reverse=True), "FOSSA 最近 10 筆訊息", 10), wide=True)
     )
@@ -1136,7 +1147,7 @@ def render_overview(passes, packets, devices, units, records, predicted: Dict[st
         ("TCA 仰角／方位", f"{fmt_number(latest.tca_ele)}°／{fmt_number(latest.tca_azi)}°" if latest else "—"),
         ("最新一場封包／可解碼", f"{latest.n_packets}／{latest.n_crc_ok}" if latest else "—"),
         ("最近 24 小時", f"{len(recent)} 場 · {recent_ok} 包可解碼"),
-        ("下次過境預測（TLE）", next_pass_tile(predicted, now)),
+        ("下次過境預測（TLE）", next_pass_tile(predicted.get("riot") or {}, now)),
     ])
     last_cell = max((float(l.get("last_cell_connection_ms") or 0) for l in links), default=0)
     next_pass = min((float(l.get("next_pass_s") or 0) for l in online), default=0)
@@ -1144,6 +1155,7 @@ def render_overview(passes, packets, devices, units, records, predicted: Dict[st
         ("最後行動網路連線", escape(_hub_time(last_cell, millis=True))),
         ("上線裝置下次過境估計", escape(_hub_next_pass(next_pass))),
         ("Hub IoT packages", f"{hub_packets:,}"),
+        ("下次過境預測（TLE）", next_pass_tile(predicted.get("fossa") or {}, now)),
         ("Hub 狀態擷取", escape(hub_snapshot_time(FOSSA_SNAPSHOT))),
     ])
     body = (
@@ -1229,7 +1241,7 @@ def render_content(
     content = (
         render_overview(passes, packets, devices, units, fossa_records, predicted, now)
         + render_riot_views(passes, packets, devices, predicted, now)
-        + render_fossa_views(units, fossa_records, comparison)
+        + render_fossa_views(units, fossa_records, comparison, predicted, now)
         + render_compare(comparison)
         + render_downloads(summary_name, packets_name)
     )

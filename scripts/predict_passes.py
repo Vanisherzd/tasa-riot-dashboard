@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""Predict BLACK KITE-2 passes over the Node site with SGP4 from the TLE the 鐳洋 platform uses.
+"""Predict satellite passes over the two node sites with SGP4, for both networks.
 
-TLE source order: 鐳洋 platform /api/tle (same elements as their pass list), CelesTrak, cached file.
+  riot  : BLACK KITE-2 over 清大校園, TLE from the 鐳洋 platform /api/tle (CelesTrak fallback)
+  fossa : every FOSSASAT-2E on CelesTrak over the 鐳洋 rooftop where the online Nexus sits
 
-  python3 scripts/predict_passes.py                 # fetch TLE, write data/tle/black_kite_2.tle + passes.json
-  python3 scripts/predict_passes.py --offline       # reuse the cached TLE (no network)
+  python3 scripts/predict_passes.py                 # fetch TLEs, write data/tle/*.tle + data/tle/passes.json
+  python3 scripts/predict_passes.py --offline       # reuse the cached TLEs (no network)
   python3 scripts/predict_passes.py --start 2026-10-16T00:00 --hours 72   # back-test a past window
 
-Needs the `sgp4` package (pip install sgp4); everything else is stdlib. Only the two element lines are parsed, never executed. TEME -> ECEF uses GMST only
-(no polar motion / nutation): a few arc-seconds, far below the TLE's own error.
+Needs the `sgp4` package (pip install sgp4); everything else is stdlib. Only element lines are parsed,
+never executed. TEME -> ECEF uses GMST only (no polar motion / nutation): a few arc-seconds, far below
+the TLE's own error. Back-test against 25 platform passes (10/01-10/16): TCA within 9 s, peak el within 2.9°.
 """
 from __future__ import annotations
 
@@ -20,55 +22,75 @@ import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
-NORAD = 68474  # BLACK KITE-2 (CelesTrak name), 2026-067BL
-NAME = "BLACK KITE-2"
-TLE_SOURCES = (
-    ("鐳洋平台 /api/tle", "https://210.61.153.16/api/tle"),
-    ("CelesTrak", f"https://celestrak.org/NORAD/elements/gp.php?CATNR={NORAD}&FORMAT=tle"),
-)
-TLE_PATH = Path("data/tle/black_kite_2.tle")
 OUT_PATH = Path("data/tle/passes.json")
 TAIPEI = timezone(timedelta(hours=8))
-# Node site: 清大校園 (cc000006 last fix). Override with --lat/--lng for the 鐳洋 test point (24.7607, 121.0655).
-SITE = {"name": "清大校園", "lat": 24.79385, "lng": 120.99454, "alt_m": 60.0}
-UPLINK_WINDOWS = ((1, 4), (13, 16))  # firmware TX hours, UTC+8, [start, end)
+UPLINK_WINDOWS = ((1, 4), (13, 16))  # Node firmware TX hours, UTC+8, [start, end)
 MIN_MAX_EL = 5.0  # passes whose peak stays below this are not listed
 STEP_S = 5
 WGS84_A = 6378.137
 WGS84_F = 1 / 298.257223563
 
+# ponytail: fixed sites; move to a config file once nodes are deployed at the field sites.
+TARGETS = {
+    "riot": {
+        "label": "BLACK KITE-2",
+        "match": lambda name, norad: norad == 68474,
+        "sources": (("鐳洋平台 /api/tle", "https://210.61.153.16/api/tle"),
+                    ("CelesTrak", "https://celestrak.org/NORAD/elements/gp.php?CATNR=68474&FORMAT=tle")),
+        "cache": Path("data/tle/black_kite_2.tle"),
+        "site": {"name": "清大校園", "lat": 24.79385, "lng": 120.99454, "alt_m": 60.0},  # cc000006 last fix
+        "uplink_windows": UPLINK_WINDOWS,
+    },
+    "fossa": {
+        "label": "FOSSASAT-2E 星系",
+        "match": lambda name, norad: name.upper().startswith("FOSSASA"),  # CelesTrak spells one "FOSSASA-2E23"
+        "sources": (("CelesTrak", "https://celestrak.org/NORAD/elements/gp.php?NAME=FOSSA&FORMAT=tle"),),
+        "cache": Path("data/tle/fossasat.tle"),
+        "site": {"name": "鐳洋測試點", "lat": 24.76069, "lng": 121.06559, "alt_m": 50.0},  # online Nexus Hub position
+        "uplink_windows": None,
+    },
+}
 
-def pick_tle(text: str) -> Optional[Tuple[str, str]]:
-    """Find our satellite's two lines in a multi-satellite TLE text (by NORAD number)."""
+
+def parse_tles(text: str) -> List[Tuple[str, str, str]]:
+    """(name, line1, line2) triplets from a 2- or 3-line TLE text."""
     lines = [ln.rstrip() for ln in text.splitlines() if ln.strip()]
-    for i in range(len(lines) - 1):
-        if lines[i].startswith(f"1 {NORAD:05d}") and lines[i + 1].startswith(f"2 {NORAD:05d}"):
-            return lines[i], lines[i + 1]
-    return None
+    out, name = [], ""
+    for i, ln in enumerate(lines):
+        if ln.startswith("1 ") and i + 1 < len(lines) and lines[i + 1].startswith("2 "):
+            out.append((name.strip() or ln[2:7], ln, lines[i + 1]))
+        elif not ln.startswith("2 "):
+            name = ln
+    return out
 
 
-def fetch_tle(path: Path, offline: bool) -> Tuple[str, str, str]:
-    """Returns (line1, line2, source); the cached file keeps the source on its first line."""
+def norad_of(line1: str) -> int:
+    return int(line1[2:7])
+
+
+def fetch_tles(target: dict, offline: bool) -> Tuple[List[Tuple[str, str, str]], str]:
+    """Returns ([(name, l1, l2)], source). The cache file keeps the source on its first line."""
+    cache: Path = target["cache"]
     if not offline:
-        for source, url in TLE_SOURCES:
+        for source, url in target["sources"]:
             try:
                 with urllib.request.urlopen(url, timeout=30) as resp:
-                    found = pick_tle(resp.read().decode("ascii", "replace"))
+                    sats = [s for s in parse_tles(resp.read().decode("ascii", "replace")) if target["match"](s[0], norad_of(s[1]))]
             except (urllib.error.URLError, TimeoutError) as exc:
                 print(f"warn: {source} fetch failed: {exc}", file=sys.stderr)
                 continue
-            if found:
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text(f"{NAME} ({source})\n{found[0]}\n{found[1]}\n", encoding="utf-8")
-                return found[0], found[1], source
-            print(f"warn: {source} reply has no TLE for {NORAD}", file=sys.stderr)
-    if not path.exists():
-        raise SystemExit("no TLE available (fetch failed and no cache)")
-    lines = path.read_text(encoding="utf-8").splitlines()
-    source = lines[0][lines[0].find("(") + 1:lines[0].rfind(")")] if "(" in lines[0] else "快取"
-    return lines[1], lines[2], f"{source}，快取"
+            if sats:
+                cache.parent.mkdir(parents=True, exist_ok=True)
+                cache.write_text(f"# {source}\n" + "".join(f"{n}\n{l1}\n{l2}\n" for n, l1, l2 in sats), encoding="utf-8")
+                return sats, source
+            print(f"warn: {source} reply has no matching TLE", file=sys.stderr)
+    if not cache.exists():
+        return [], "無"
+    text = cache.read_text(encoding="utf-8").splitlines()
+    source = text[0][2:] if text and text[0].startswith("# ") else "快取"
+    return parse_tles("\n".join(text[1:] if text and text[0].startswith("# ") else text)), f"{source}，快取"
 
 
 def geodetic_to_ecef(lat_deg: float, lng_deg: float, alt_km: float) -> Tuple[float, float, float]:
@@ -106,7 +128,8 @@ def look_angles(sat, when: datetime, site_ecef, lat_deg: float, lng_deg: float) 
     return math.degrees(math.asin(up / rng)), math.degrees(math.atan2(east, north)) % 360.0, rng
 
 
-def find_passes(line1: str, line2: str, start: datetime, hours: float, lat: float, lng: float, alt_m: float) -> List[dict]:
+def find_passes(line1: str, line2: str, start: datetime, hours: float, lat: float, lng: float, alt_m: float,
+                windows=None, sat_name: str = "") -> List[dict]:
     from sgp4.api import Satrec
     sat = Satrec.twoline2rv(line1, line2)
     site = geodetic_to_ecef(lat, lng, alt_m / 1000.0)
@@ -115,8 +138,7 @@ def find_passes(line1: str, line2: str, start: datetime, hours: float, lat: floa
     def cross(lo: datetime, hi: datetime, rising: bool) -> datetime:
         for _ in range(12):  # 5 s -> ~1 ms
             mid = lo + (hi - lo) / 2
-            above = el_at(mid)[0] > 0
-            if above == rising:
+            if (el_at(mid)[0] > 0) == rising:
                 hi = mid
             else:
                 lo = mid
@@ -137,16 +159,17 @@ def find_passes(line1: str, line2: str, start: datetime, hours: float, lat: floa
             best = max((el_at(aos + timedelta(seconds=s)) + (s,) for s in range(0, int((los - aos).total_seconds()) + 1)), key=lambda v: v[0])
             tca = aos + timedelta(seconds=best[3])
             if best[0] >= MIN_MAX_EL:
-                passes.append(_pass_dict(aos, tca, los, best[0], el_at(aos)[1], best[1], el_at(los)[1]))
+                passes.append(_pass_dict(aos, tca, los, best[0], el_at(aos)[1], best[1], el_at(los)[1], windows, sat_name))
             aos = None
         prev_above = above
         t = t2
     return passes
 
 
-def _pass_dict(aos: datetime, tca: datetime, los: datetime, max_el: float, az_aos: float, az_tca: float, az_los: float) -> dict:
+def _pass_dict(aos, tca, los, max_el, az_aos, az_tca, az_los, windows, sat_name) -> dict:
     local = tca.astimezone(TAIPEI)
-    return {
+    out = {
+        "sat": sat_name,
         "aos": aos.astimezone(TAIPEI).strftime("%Y-%m-%d %H:%M:%S"),
         "tca": local.strftime("%Y-%m-%d %H:%M:%S"),
         "los": los.astimezone(TAIPEI).strftime("%Y-%m-%d %H:%M:%S"),
@@ -154,8 +177,10 @@ def _pass_dict(aos: datetime, tca: datetime, los: datetime, max_el: float, az_ao
         "duration_s": int((los - aos).total_seconds()),
         "max_el": round(max_el, 1),
         "az_aos": round(az_aos), "az_tca": round(az_tca), "az_los": round(az_los),
-        "in_uplink_window": any(a <= local.hour < b for a, b in UPLINK_WINDOWS),
     }
+    if windows:
+        out["in_uplink_window"] = any(a <= local.hour < b for a, b in windows)
+    return out
 
 
 def tle_epoch(line1: str) -> datetime:
@@ -163,41 +188,55 @@ def tle_epoch(line1: str) -> datetime:
     return datetime(year, 1, 1, tzinfo=timezone.utc) + timedelta(days=float(line1[20:32]) - 1)
 
 
+def predict_target(key: str, target: dict, start: datetime, hours: float, now: datetime, offline: bool) -> Dict[str, object]:
+    sats, source = fetch_tles(target, offline)
+    site = target["site"]
+    passes: List[dict] = []
+    for name, l1, l2 in sats:
+        passes += find_passes(l1, l2, start, hours, site["lat"], site["lng"], site["alt_m"], target["uplink_windows"], name)
+    passes.sort(key=lambda p: p["tca_unix"])
+    epochs = [tle_epoch(l1) for _, l1, _ in sats]
+    newest = max(epochs) if epochs else None
+    out: Dict[str, object] = {
+        "label": target["label"], "satellites": [n for n, _, _ in sats], "source": source,
+        "tle_epoch": newest.astimezone(TAIPEI).strftime("%Y-%m-%d %H:%M:%S") if newest else "—",
+        "tle_age_h": round((now - min(epochs)).total_seconds() / 3600, 1) if epochs else None,  # oldest element set
+        "site": site, "min_max_el": MIN_MAX_EL, "passes": passes,
+    }
+    if target["uplink_windows"]:
+        out["uplink_windows"] = [f"{s:02d}:00-{e:02d}:00" for s, e in target["uplink_windows"]]
+    print(f"{key}: {target['label']} {len(sats)} sat(s), TLE {source}, newest epoch {out['tle_epoch']}; {len(passes)} passes in {hours:g} h over {site['name']}")
+    for p in passes[:10]:
+        flag = ("上行時段" if p.get("in_uplink_window") else "") if target["uplink_windows"] else p["sat"]
+        print(f"  {p['aos'][5:16]} -> {p['tca'][11:19]} -> {p['los'][11:19]}  max {p['max_el']:5.1f}°  az {p['az_aos']:3d}->{p['az_los']:3d}  {p['duration_s']:4d} s  {flag}")
+    return out
+
+
 def main() -> None:
-    ap = argparse.ArgumentParser(description="以 TLE 預測 BLACK KITE-2 過境時間")
-    ap.add_argument("--offline", action="store_true", help="不連 CelesTrak，使用快取 TLE")
+    ap = argparse.ArgumentParser(description="以 TLE 預測 BLACK KITE-2 與 FOSSASAT-2E 過境時間")
+    ap.add_argument("--offline", action="store_true", help="不連網，使用快取 TLE")
     ap.add_argument("--start", help="起算時間（本地 UTC+8，ISO），預設現在")
     ap.add_argument("--hours", type=float, default=48.0)
-    ap.add_argument("--lat", type=float, default=SITE["lat"])
-    ap.add_argument("--lng", type=float, default=SITE["lng"])
-    ap.add_argument("--alt", type=float, default=SITE["alt_m"])
-    ap.add_argument("--tle", type=Path, default=TLE_PATH)
+    ap.add_argument("--only", choices=sorted(TARGETS), help="只算一個網路")
     ap.add_argument("--out", type=Path, default=OUT_PATH)
     a = ap.parse_args()
     try:
         import sgp4  # noqa: F401
     except ImportError:
         raise SystemExit("需要 sgp4：pip install sgp4")
-    l1, l2, source = fetch_tle(a.tle, a.offline)
     now = datetime.now(timezone.utc)
     start = datetime.fromisoformat(a.start).replace(tzinfo=TAIPEI).astimezone(timezone.utc) if a.start else now
-    passes = find_passes(l1, l2, start, a.hours, a.lat, a.lng, a.alt)
-    epoch = tle_epoch(l1)
-    out = {
-        "satellite": NAME, "norad": NORAD, "source": source, "tle": [l1, l2],
-        "tle_epoch": epoch.astimezone(TAIPEI).strftime("%Y-%m-%d %H:%M:%S"),
-        "tle_age_h": round((now - epoch).total_seconds() / 3600, 1),
+    out: Dict[str, object] = {
         "generated_at": now.astimezone(TAIPEI).strftime("%Y-%m-%d %H:%M:%S"),
         "start": start.astimezone(TAIPEI).strftime("%Y-%m-%d %H:%M:%S"), "hours": a.hours,
-        "site": {"name": SITE["name"] if (a.lat, a.lng) == (SITE["lat"], SITE["lng"]) else "自訂", "lat": a.lat, "lng": a.lng, "alt_m": a.alt},
-        "min_max_el": MIN_MAX_EL, "uplink_windows": [f"{s:02d}:00-{e:02d}:00" for s, e in UPLINK_WINDOWS],
-        "passes": passes,
     }
+    for key, target in TARGETS.items():
+        if a.only and key != a.only:
+            continue
+        out[key] = predict_target(key, target, start, a.hours, now, a.offline)
     a.out.parent.mkdir(parents=True, exist_ok=True)
     a.out.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-    print(f"{NAME}: TLE epoch {out['tle_epoch']} ({out['tle_age_h']} h old); {len(passes)} passes in {a.hours:g} h from {out['start']} -> {a.out}")
-    for p in passes:
-        print(f"  {p['aos'][5:16]} -> {p['tca'][11:19]} -> {p['los'][11:19]}  max {p['max_el']:5.1f}°  az {p['az_aos']:3d}->{p['az_los']:3d}  {p['duration_s']:4d} s  {'上行時段' if p['in_uplink_window'] else ''}")
+    print(f"-> {a.out}")
 
 
 if __name__ == "__main__":
