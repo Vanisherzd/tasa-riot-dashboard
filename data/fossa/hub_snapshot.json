@@ -1,5 +1,5 @@
 {
- "fetched_at": 1792578732.35488,
+ "fetched_at": 1792600639.3098938,
  "links": [
   {
    "link_id": "6abcd7ef984aa0d94869ceff",
@@ -8,17 +8,17 @@
    "nexus_mac": "98A316039C18",
    "name": "NEXUS 1.0",
    "active": true,
-   "last_cell_connection_ms": 1792578724787,
-   "status_time_s": 1792578703,
-   "elapsed_s": 161630,
+   "last_cell_connection_ms": 1792600601673,
+   "status_time_s": 1792600570,
+   "elapsed_s": 183342,
    "position": {
-    "alt": 36.957,
-    "lat": 24.794306,
-    "lng": 120.994125
+    "alt": 102.513,
+    "lat": 24.794357,
+    "lng": 120.99403
    },
-   "next_pass_s": 1792587276,
+   "next_pass_s": 1792603027,
    "last_sat_packet_s": 0,
-   "rx_packet_count": 2,
+   "rx_packet_count": 7,
    "tx_queue_len": 5,
    "link_resets": 25,
    "link_fw": {
@@ -29,8 +29,8 @@
    "total_packets": 4,
    "last_packet_ms": 1792519198749,
    "total_commands": 12,
-   "temperature_c": 32.201874,
-   "humidity_pct": 49.664913,
+   "temperature_c": 30.204468,
+   "humidity_pct": 51.328144,
    "nexus_resets": 28,
    "nexus_fw": {
     "major": 5,
@@ -38,14 +38,14 @@
     "patch": 6
    },
    "power": {
-    "battVolt": 0,
+    "battVolt": 1,
     "bus3Volt": 3310,
-    "bus5Volt": 4959,
+    "bus5Volt": 4923,
     "ext4201": 0,
     "ext4202": 0,
-    "extAdc1": 1379,
-    "extAdc2": 1344,
-    "extAdc3": 505
+    "extAdc1": 1341,
+    "extAdc2": 1311,
+    "extAdc3": 480
    },
    "cell_period_s": 10,
    "force_only_sat": false,
@@ -58,17 +58,17 @@
    "nexus_mac": "98A31628461C",
    "name": "NEXUS 1.0",
    "active": true,
-   "last_cell_connection_ms": 1792578724310,
-   "status_time_s": 1792578712,
-   "elapsed_s": 201280,
+   "last_cell_connection_ms": 1792600620179,
+   "status_time_s": 1792600589,
+   "elapsed_s": 222995,
    "position": {
-    "alt": 90.549,
-    "lat": 24.794514,
-    "lng": 120.99422
+    "alt": 71.151,
+    "lat": 24.794487,
+    "lng": 120.994125
    },
-   "next_pass_s": 1792587275,
+   "next_pass_s": 1792603027,
    "last_sat_packet_s": 0,
-   "rx_packet_count": 0,
+   "rx_packet_count": 3,
    "tx_queue_len": 5,
    "link_resets": 17,
    "link_fw": {
@@ -79,8 +79,8 @@
    "total_packets": 3,
    "last_packet_ms": 1792518786042,
    "total_commands": 9,
-   "temperature_c": 31.88678,
-   "humidity_pct": 43.488823,
+   "temperature_c": 30.078964,
+   "humidity_pct": 44.331882,
    "nexus_resets": 18,
    "nexus_fw": {
     "major": 5,
@@ -90,12 +90,12 @@
    "power": {
     "battVolt": 0,
     "bus3Volt": 3310,
-    "bus5Volt": 4990,
+    "bus5Volt": 5005,
     "ext4201": 0,
     "ext4202": 0,
-    "extAdc1": 1429,
-    "extAdc2": 1405,
-    "extAdc3": 1809
+    "extAdc1": 1400,
+    "extAdc2": 1390,
+    "extAdc3": 1785
    },
    "cell_period_s": 10,
    "force_only_sat": false,
@@ -108,18 +108,18 @@
    "nexus_mac": "98A316039C3C",
    "name": "NEXUS 1.0",
    "active": true,
-   "last_cell_connection_ms": 1792578452311,
-   "status_time_s": 1792578441,
-   "elapsed_s": 368410,
+   "last_cell_connection_ms": 1792600345024,
+   "status_time_s": 1792600329,
+   "elapsed_s": 390154,
    "position": {
-    "alt": 178.56,
-    "lat": 24.760767,
-    "lng": 121.06527
+    "alt": 140.538,
+    "lat": 24.760698,
+    "lng": 121.06555
    },
-   "next_pass_s": 1792587274,
+   "next_pass_s": 1792603041,
    "last_sat_packet_s": 0,
    "rx_packet_count": 6,
-   "tx_queue_len": 4,
+   "tx_queue_len": 5,
    "link_resets": 8,
    "link_fw": {
     "major": 4,
@@ -129,8 +129,8 @@
    "total_packets": 2,
    "last_packet_ms": 1791295831200,
    "total_commands": 3,
-   "temperature_c": 34.67727,
-   "humidity_pct": 49.53521,
+   "temperature_c": 31.235214,
+   "humidity_pct": 51.196537,
    "nexus_resets": 10,
    "nexus_fw": {
     "major": 5,
@@ -140,12 +140,12 @@
    "power": {
     "battVolt": 0,
     "bus3Volt": 3310,
-    "bus5Volt": 4959,
+    "bus5Volt": 4932,
     "ext4201": 0,
     "ext4202": 0,
-    "extAdc1": 1338,
-    "extAdc2": 1385,
-    "extAdc3": 1914
+    "extAdc1": 1284,
+    "extAdc2": 1317,
+    "extAdc3": 1857
    },
    "cell_period_s": 300,
    "force_only_sat": true,
