@@ -1,5 +1,5 @@
 {
- "fetched_at": 1792426154.4791958,
+ "fetched_at": 1792578732.35488,
  "links": [
   {
    "link_id": "6abcd7ef984aa0d94869ceff",
@@ -8,30 +8,30 @@
    "nexus_mac": "98A316039C18",
    "name": "NEXUS 1.0",
    "active": true,
-   "last_cell_connection_ms": 1792415599941,
-   "status_time_s": 1792415594,
-   "elapsed_s": 124779,
+   "last_cell_connection_ms": 1792578724787,
+   "status_time_s": 1792578703,
+   "elapsed_s": 161630,
    "position": {
-    "alt": 75.602,
-    "lat": 24.794146,
-    "lng": 120.99473
+    "alt": 36.957,
+    "lat": 24.794306,
+    "lng": 120.994125
    },
-   "next_pass_s": 1792416534,
+   "next_pass_s": 1792587276,
    "last_sat_packet_s": 0,
-   "rx_packet_count": 0,
-   "tx_queue_len": 0,
-   "link_resets": 18,
+   "rx_packet_count": 2,
+   "tx_queue_len": 5,
+   "link_resets": 25,
    "link_fw": {
     "major": 4,
     "minor": 5,
     "patch": 2
    },
-   "total_packets": 3,
-   "last_packet_ms": 1792398360164,
-   "total_commands": 1,
-   "temperature_c": 32.217896,
-   "humidity_pct": 50.563286,
-   "nexus_resets": 19,
+   "total_packets": 4,
+   "last_packet_ms": 1792519198749,
+   "total_commands": 12,
+   "temperature_c": 32.201874,
+   "humidity_pct": 49.664913,
+   "nexus_resets": 28,
    "nexus_fw": {
     "major": 5,
     "minor": 1,
@@ -40,14 +40,14 @@
    "power": {
     "battVolt": 0,
     "bus3Volt": 3310,
-    "bus5Volt": 5009,
+    "bus5Volt": 4959,
     "ext4201": 0,
     "ext4202": 0,
-    "extAdc1": 1376,
-    "extAdc2": 1346,
-    "extAdc3": 513
+    "extAdc1": 1379,
+    "extAdc2": 1344,
+    "extAdc3": 505
    },
-   "cell_period_s": 0,
+   "cell_period_s": 10,
    "force_only_sat": false,
    "integrations": []
   },
@@ -58,30 +58,30 @@
    "nexus_mac": "98A31628461C",
    "name": "NEXUS 1.0",
    "active": true,
-   "last_cell_connection_ms": 1792415563722,
-   "status_time_s": 1792415545,
-   "elapsed_s": 137219,
+   "last_cell_connection_ms": 1792578724310,
+   "status_time_s": 1792578712,
+   "elapsed_s": 201280,
    "position": {
-    "alt": -158.331,
-    "lat": 24.793226,
-    "lng": 120.9899
+    "alt": 90.549,
+    "lat": 24.794514,
+    "lng": 120.99422
    },
-   "next_pass_s": 1792416524,
+   "next_pass_s": 1792587275,
    "last_sat_packet_s": 0,
    "rx_packet_count": 0,
-   "tx_queue_len": 0,
-   "link_resets": 10,
+   "tx_queue_len": 5,
+   "link_resets": 17,
    "link_fw": {
     "major": 4,
     "minor": 5,
     "patch": 2
    },
-   "total_packets": 2,
-   "last_packet_ms": 1791295835193,
-   "total_commands": 21,
-   "temperature_c": 29.408714,
-   "humidity_pct": 44.19646,
-   "nexus_resets": 11,
+   "total_packets": 3,
+   "last_packet_ms": 1792518786042,
+   "total_commands": 9,
+   "temperature_c": 31.88678,
+   "humidity_pct": 43.488823,
+   "nexus_resets": 18,
    "nexus_fw": {
     "major": 5,
     "minor": 1,
@@ -90,14 +90,14 @@
    "power": {
     "battVolt": 0,
     "bus3Volt": 3310,
-    "bus5Volt": 4937,
+    "bus5Volt": 4990,
     "ext4201": 0,
     "ext4202": 0,
-    "extAdc1": 1386,
-    "extAdc2": 1357,
-    "extAdc3": 1764
+    "extAdc1": 1429,
+    "extAdc2": 1405,
+    "extAdc3": 1809
    },
-   "cell_period_s": 0,
+   "cell_period_s": 10,
    "force_only_sat": false,
    "integrations": []
   },
@@ -108,18 +108,18 @@
    "nexus_mac": "98A316039C3C",
    "name": "NEXUS 1.0",
    "active": true,
-   "last_cell_connection_ms": 1792426142984,
-   "status_time_s": 1792426140,
-   "elapsed_s": 217112,
+   "last_cell_connection_ms": 1792578452311,
+   "status_time_s": 1792578441,
+   "elapsed_s": 368410,
    "position": {
-    "alt": 160.968,
-    "lat": 24.76074,
-    "lng": 121.06555
+    "alt": 178.56,
+    "lat": 24.760767,
+    "lng": 121.06527
    },
-   "next_pass_s": 1792426818,
+   "next_pass_s": 1792587274,
    "last_sat_packet_s": 0,
-   "rx_packet_count": 5,
-   "tx_queue_len": 0,
+   "rx_packet_count": 6,
+   "tx_queue_len": 4,
    "link_resets": 8,
    "link_fw": {
     "major": 4,
@@ -128,9 +128,9 @@
    },
    "total_packets": 2,
    "last_packet_ms": 1791295831200,
-   "total_commands": 29,
-   "temperature_c": 33.60647,
-   "humidity_pct": 49.880447,
+   "total_commands": 3,
+   "temperature_c": 34.67727,
+   "humidity_pct": 49.53521,
    "nexus_resets": 10,
    "nexus_fw": {
     "major": 5,
@@ -140,12 +140,12 @@
    "power": {
     "battVolt": 0,
     "bus3Volt": 3310,
-    "bus5Volt": 4974,
+    "bus5Volt": 4959,
     "ext4201": 0,
     "ext4202": 0,
-    "extAdc1": 1327,
-    "extAdc2": 1362,
-    "extAdc3": 1900
+    "extAdc1": 1338,
+    "extAdc2": 1385,
+    "extAdc3": 1914
    },
    "cell_period_s": 300,
    "force_only_sat": true,

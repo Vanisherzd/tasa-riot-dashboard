@@ -74,6 +74,11 @@ def list_links(token: str) -> List[dict]:
     links: List[dict] = []
     for app in body.get("data") or []:
         for dev in app.get("devices") or []:
+            # A pending "Devices Orders" request shows up as a placeholder link
+            # (deviceStatus "requested", mac "xxxxxxxxxxxx", no Nexus); it is not a node.
+            if dev.get("deviceStatus") == "requested" or not dev.get("nexusMacAddress"):
+                print(f"skip placeholder link {dev.get('linkName')!r} ({dev.get('mac')})", file=sys.stderr)
+                continue
             links.append({"application": (app.get("application") or {}).get("name"), **dev})
     return links
 
