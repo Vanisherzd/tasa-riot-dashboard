@@ -64,15 +64,15 @@ All colors are CSS custom properties in `style.css`; no component owns a raw col
 
 ### Packet contents
 - The network and device `封包內容` tabs show complete packet history, newest reception first. Dashboard previews show the latest ten packets.
-- RIOT groups packets by pass in native `details` with the newest two passes open. The summary names the UTC+8 pass time, source file, packet count and CRC-ok count. Within a pass, descending UART line number supplies reception order; the packet's Unix time is a separate decoded field, never a reception timestamp.
-- Raw hex is always visible in each packet row, using the system mono font. CRC-8 labels say `通過` or `失敗`; failed packets replace all decoded fields with `不可信，已隱藏`, including the address. Device association for failed packets is only a candidate based on the received address bytes.
+- RIOT groups packets by pass in native `details` with the newest two passes open. The summary names the UTC+8 pass time, source file and packet count. Within a pass, descending UART line number supplies reception order; the packet's Unix time is a separate decoded field, never a reception timestamp.
+- Raw hex is always visible in each packet row, using the system mono font. CRC-failed packets are filtered out when the CSV is loaded (and from the published CSVs), so the site never shows or counts them; raw `.bin` logs are published untouched.
 - FOSSA shows the original message/payload, transport bytes as text and hex, link/device identity, UTC+8 times, and escaped record metadata. Payloads are hard-decoded: printable text is shown as text, a leading float32 lat/lng/alt triple (Hub Kaitai example layout) is shown as GPS and plotted as small dots, anything else is hex only. Hub GPS-fix status remains a separate feature.
 - Payload and metadata blocks wrap long unbroken input at a 52ch measure; tables scroll only inside their labeled, focusable wrapper. Pass summaries wrap, have a visible focus ring, and use spacing tokens for a comfortable touch target.
 - Empty states distinguish no RIOT packets from no cached FOSSA messages; a Hub packet counter does not imply locally available packet contents.
 
 ### Chart
 - Structure: accessible inline SVG title and description, axes, grid, grouped bars, legend.
-- Variants: per-pass totals/CRC, SNR-bin totals/CRC, FOSSA daily totals/provisional-valid, and cross-network daily comparison.
+- Variants: per-pass totals, SNR-bin totals, FOSSA daily totals/provisional-valid, and cross-network daily comparison (鐳洋 received, FOSSA received, FOSSA provisional-valid).
 - Empty state: text panel rather than an empty SVG.
 
 ### Source section
@@ -98,6 +98,6 @@ Mixed but restrained: one-pixel borders separate panels and a single tonal shift
 ## 8. Accessibility Constraints & Accepted Debt
 
 - Target WCAG 2.2 AA: 4.5:1 body contrast, 3:1 large text and chart marks, visible focus for every link and scroll region, semantic landmarks and tables.
-- Both light and dark system themes are supported. SVG charts carry text alternatives and never encode CRC status by color alone because legends and labels name both series.
+- Both light and dark system themes are supported. SVG charts carry text alternatives and never rely on color alone because legends and labels name every series.
 - Accepted debt: dense tables require local horizontal scrolling on narrow screens; preserving all scientific columns is more useful than hiding them. The wrapper is labeled and keyboard focusable.
 - FOSSA packet payloads are hard-decoded (text / float32 GPS / hex); the GPS layout is provisional until the vendor confirms the frame format. GPS-fix status still uses the Hub position report.

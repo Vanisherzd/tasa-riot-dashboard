@@ -169,7 +169,9 @@ def load_passes(path: Path) -> List[PassRow]:
             pass_local=row.get("pass_local", ""),
             tca_ele=optional_float(row.get("tca_ele", "")),
             tca_azi=optional_float(row.get("tca_azi", "")),
-            n_packets=int(row.get("n_packets", "0") or 0),
+            # ponytail: CRC-failed packets are kept off the site for now (2026-10-21 decision,
+            # CRC issue to be studied later); per-pass counts therefore use the CRC-ok number.
+            n_packets=int(row.get("n_crc_ok", "0") or 0),
             n_crc_ok=int(row.get("n_crc_ok", "0") or 0),
             snr_min=optional_float(row.get("snr_min", "")),
             snr_max=optional_float(row.get("snr_max", "")),
@@ -204,6 +206,7 @@ def load_packets(path: Path) -> List[PacketRow]:
             hex=row.get("hex", ""),
         )
         for row in rows
+        if row.get("crc_ok", "").strip().lower() in {"1", "true", "yes"}  # CRC-failed rows never reach the site
     ]
 
 
@@ -221,7 +224,7 @@ def latest_csv_pair() -> Tuple[Path, Path]:
 def device_statistics(packets: Sequence[PacketRow]) -> List[DeviceStats]:
     known_macs = {mac for mac, _ in KNOWN_DEVICES}
     groups = [(mac, label, [row for row in packets if row.mac == mac]) for mac, label in KNOWN_DEVICES]
-    groups.append(("other", "其他（地址無法解碼）", [row for row in packets if row.mac not in known_macs]))
+    groups.append(("other", "其他（未登錄地址）", [row for row in packets if row.mac not in known_macs]))
     stats = []
     for key, label, rows in groups:
         correct = [row for row in rows if row.crc_ok]
@@ -424,9 +427,9 @@ def grouped_bar_svg(
     description: str,
     labels: Sequence[str],
     totals: Sequence[int],
-    correct: Sequence[int],
+    correct: Optional[Sequence[int]] = None,
     annotations: Optional[Sequence[str]] = None,
-    series_names: Tuple[str, str] = ("封包", "CRC 正確"),
+    series_names: Tuple[str, str] = ("封包", "有效"),
     bar_classes: Tuple[str, str] = ("bar-total", "bar-ok"),
 ) -> str:
     if not labels:
@@ -434,9 +437,10 @@ def grouped_bar_svg(
     width, height = 1200, 390
     left, right, top, bottom = 54, 18, 44, 92
     plot_width, plot_height = width - left - right, height - top - bottom
-    peak = max(max(totals, default=0), max(correct, default=0), 1)
+    peak = max(max(totals, default=0), max(correct or (), default=0), 1)
     slot = plot_width / len(labels)
     bar_width = min(18.0, slot * 0.31)
+    paired = correct is not None
     parts = [
         f'<svg viewBox="0 0 {width} {height}" role="img" aria-labelledby="{chart_id}-title {chart_id}-desc">',
         f'<title id="{chart_id}-title">{escape(title)}</title>',
@@ -447,21 +451,24 @@ def grouped_bar_svg(
         parts.append(f'<line class="chart-grid" x1="{left}" y1="{y:.1f}" x2="{width-right}" y2="{y:.1f}"/>')
         parts.append(f'<text class="chart-axis" x="{left-8}" y="{y+4:.1f}" text-anchor="end">{value}</text>')
     label_every = max(1, math.ceil(len(labels) / 10))
-    for index, (label, total, ok) in enumerate(zip(labels, totals, correct)):
+    for index, (label, total) in enumerate(zip(labels, totals)):
+        ok = correct[index] if paired else 0
         center = left + slot * (index + 0.5)
         total_height = plot_height * total / peak
         ok_height = plot_height * ok / peak
         base_y = top + plot_height
+        total_x = center - bar_width - 1 if paired else center - bar_width / 2
         parts.append(
-            f'<rect class="{bar_classes[0]}" x="{center-bar_width-1:.1f}" y="{base_y-total_height:.1f}" '
+            f'<rect class="{bar_classes[0]}" x="{total_x:.1f}" y="{base_y-total_height:.1f}" '
             f'width="{bar_width:.1f}" height="{total_height:.1f}">'
             f'<title>{escape(label)}：{escape(series_names[0])} {total}</title></rect>'
         )
-        parts.append(
-            f'<rect class="{bar_classes[1]}" x="{center+1:.1f}" y="{base_y-ok_height:.1f}" '
-            f'width="{bar_width:.1f}" height="{ok_height:.1f}">'
-            f'<title>{escape(label)}：{escape(series_names[1])} {ok}</title></rect>'
-        )
+        if paired:
+            parts.append(
+                f'<rect class="{bar_classes[1]}" x="{center+1:.1f}" y="{base_y-ok_height:.1f}" '
+                f'width="{bar_width:.1f}" height="{ok_height:.1f}">'
+                f'<title>{escape(label)}：{escape(series_names[1])} {ok}</title></rect>'
+            )
         if annotations:
             note_y = min(base_y - max(total_height, ok_height) - 7, base_y - 7)
             parts.append(f'<text class="chart-note" x="{center:.1f}" y="{note_y:.1f}" text-anchor="middle">{escape(annotations[index])}</text>')
@@ -484,29 +491,26 @@ def pass_chart(passes: Sequence[PassRow]) -> str:
     notes = [f"{item.tca_ele:.0f}°" if item.tca_ele is not None else "—" for item in ordered]
     return grouped_bar_svg(
         "passes-chart",
-        "每場次封包數與 CRC 正確數",
-        "每組兩柱分別代表總封包與 CRC 正確封包；柱頂文字是 TCA 仰角。",
+        "每場次封包數",
+        "每柱為該場次收到的封包數；柱頂文字是 TCA 仰角。",
         labels,
         [item.n_packets for item in ordered],
-        [item.n_crc_ok for item in ordered],
-        notes,
+        annotations=notes,
     )
 
 
 def snr_chart(packets: Sequence[PacketRow]) -> str:
-    bins = {}
+    bins: Dict[int, int] = {}
     for packet in packets:
         lower = math.floor(packet.snr / 4) * 4
-        total, correct = bins.get(lower, (0, 0))
-        bins[lower] = (total + 1, correct + int(packet.crc_ok))
+        bins[lower] = bins.get(lower, 0) + 1
     ordered = sorted(bins)
     return grouped_bar_svg(
         "snr-chart",
-        "SNR 分箱與 CRC 正確數",
-        "SNR 以 4 dB 分箱；每組兩柱分別代表總封包與 CRC 正確封包。",
+        "SNR 分箱封包數",
+        "SNR 以 4 dB 分箱；每柱為該箱的封包數。",
         [f"{lower}～{lower + 4}" for lower in ordered],
-        [bins[lower][0] for lower in ordered],
-        [bins[lower][1] for lower in ordered],
+        [bins[lower] for lower in ordered],
     )
 
 
@@ -531,7 +535,7 @@ def comparison_chart(comparison: Sequence[DailyComparison]) -> str:
     left, right, top, bottom = 54, 18, 44, 92
     plot_width, plot_height = width - left - right, height - top - bottom
     values = [
-        max(item.riot_total, item.riot_valid, item.fossa_total, item.fossa_valid)
+        max(item.riot_total, item.fossa_total, item.fossa_valid)
         for item in comparison
     ]
     peak = max(values, default=1) or 1
@@ -539,14 +543,13 @@ def comparison_chart(comparison: Sequence[DailyComparison]) -> str:
     bar_width = min(14.0, slot * 0.18)
     series = (
         ("bar-total", "鐳洋收到", [item.riot_total for item in comparison]),
-        ("bar-ok", "鐳洋 CRC 正確", [item.riot_valid for item in comparison]),
         ("bar-fossa", "FOSSA 收到", [item.fossa_total for item in comparison]),
         ("bar-fossa-valid", "FOSSA 暫定有效", [item.fossa_valid for item in comparison]),
     )
     parts = [
         '<svg viewBox="0 0 1200 390" role="img" aria-labelledby="comparison-chart-title comparison-chart-desc">',
         '<title id="comparison-chart-title">鐳洋與 FOSSA 每日接收對照</title>',
-        '<desc id="comparison-chart-desc">每日四柱依序是鐳洋收到、鐳洋 CRC 正確、FOSSA 收到與 FOSSA 暫定有效。</desc>',
+        '<desc id="comparison-chart-desc">每日三柱依序是鐳洋收到、FOSSA 收到與 FOSSA 暫定有效。</desc>',
     ]
     for value in chart_ticks(peak):
         y = top + plot_height - plot_height * value / peak
@@ -559,7 +562,7 @@ def comparison_chart(comparison: Sequence[DailyComparison]) -> str:
         for series_index, (class_name, series_name, series_values) in enumerate(series):
             value = series_values[index]
             bar_height = plot_height * value / peak
-            x = center + (series_index - 1.5) * (bar_width + 2) - bar_width / 2
+            x = center + (series_index - (len(series) - 1) / 2) * (bar_width + 2) - bar_width / 2
             parts.append(
                 f'<rect class="{class_name}" x="{x:.1f}" y="{top+plot_height-bar_height:.1f}" '
                 f'width="{bar_width:.1f}" height="{bar_height:.1f}">'
@@ -737,26 +740,20 @@ def panel(title: str, note: str, inner: str) -> str:
 def riot_messages_table(items: Sequence[PacketRow], caption: str, limit: int) -> str:
     rows = []
     for item in items[:limit]:
-        decoded = (
+        rows.append((
+            f'<th scope="row" class="mono">{escape(item.pass_local)}</th>',
+            f'<td class="mono"><a href="raw/{quote(item.file)}" download>{escape(item.file)}</a><br>行 {item.line} · {item.size} B</td>',
+            f'<td class="number">{item.rssi:.1f} dBm / {item.snr:.1f} dB</td>',
+            f'<td><pre class="mono packet-text">{escape(item.hex or "—")}</pre></td>',
             f'<td class="mono">{escape(item.mac)}</td>',
             f'<td>{osm_link(item.lat, item.lng, 6)}</td>',
             f'<td class="mono">{escape(local_time(item.unix) or "—")}</td>',
             f'<td class="number">{item.bat_v:.1f} V</td>',
-        ) if item.crc_ok else (
-            '<td colspan="4" class="warning">CRC-8 失敗：解碼欄位不可信，已隱藏。</td>',
-        )
-        rows.append((
-            f'<th scope="row" class="mono">{escape(item.pass_local)}</th>',
-            f'<td class="mono"><a href="raw/{quote(item.file)}" download>{escape(item.file)}</a><br>行 {item.line} · {item.size} B</td>',
-            f'<td class="{"good" if item.crc_ok else "warning"}">CRC-8 {"通過" if item.crc_ok else "失敗"}</td>',
-            f'<td class="number">{item.rssi:.1f} dBm / {item.snr:.1f} dB</td>',
-            f'<td><pre class="mono packet-text">{escape(item.hex or "—")}</pre></td>',
-            *decoded,
         ))
     if not rows:
         return '<div class="empty"><p>尚無封包；請確認本機過境紀錄與逐封包 CSV 已產生。</p></div>'
     return render_table(
-        ("接收／過境時間（UTC+8）", "過境（原始檔）", "CRC-8", "RSSI / SNR", "Raw hex", "裝置地址", "緯度／經度", "封包時間（Unix → UTC+8）", "電池電壓"),
+        ("接收／過境時間（UTC+8）", "過境（原始檔）", "RSSI / SNR", "Raw hex", "裝置地址", "緯度／經度", "封包時間（Unix → UTC+8）", "電池電壓"),
         rows,
         caption,
     )
@@ -768,7 +765,7 @@ def riot_packet_contents(items: Sequence[PacketRow], caption: str) -> str:
         groups.setdefault((item.pass_local, item.file), []).append(item)
     details = []
     for index, ((when, filename), packets) in enumerate(groups.items()):
-        summary = f'{when} UTC+8 · {filename} · {len(packets):,} 包 · CRC-8 通過 {sum(p.crc_ok for p in packets):,}'
+        summary = f'{when} UTC+8 · {filename} · {len(packets):,} 包'
         details.append(
             f'<details class="packet-pass"{" open" if index < 2 else ""}><summary>{escape(summary)}</summary>'
             + riot_messages_table(packets, f"{caption} · {when} · {filename}", len(packets))
@@ -794,14 +791,13 @@ def riot_passes_table(passes: Sequence[PassRow], caption: str) -> str:
             f'<td class="number">{fmt_number(item.tca_ele)}°</td>',
             f'<td class="number">{fmt_number(item.tca_azi)}°</td>',
             f'<td class="number">{item.n_packets:,}</td>',
-            f'<td class="number good">{item.n_crc_ok:,}</td>',
             f'<td class="number">{snr}</td>',
             f"<td>{macs}</td>",
             f'<td class="mono">{raw_link}</td>',
         ))
     if not rows:
         return '<div class="empty"><p>尚無過境紀錄。</p></div>'
-    return render_table(("Local 時間", "TCA 仰角", "TCA 方位", "封包", "可解碼", "SNR (dB)", "已知 MAC", "原始檔"), rows, caption)
+    return render_table(("Local 時間", "TCA 仰角", "TCA 方位", "封包", "SNR (dB)", "已知 MAC", "原始檔"), rows, caption)
 
 
 def riot_pass_list(passes: Sequence[PassRow], limit: int = 8) -> str:
@@ -816,8 +812,8 @@ def riot_pass_list(passes: Sequence[PassRow], limit: int = 8) -> str:
 def riot_charts(passes: Sequence[PassRow], packets: Sequence[PacketRow]) -> str:
     return (
         '<div class="charts">'
-        f'<article class="panel chart"><div class="panel__body"><h3>每場次封包</h3><p class="legend"><span><i></i>全部封包</span><span><i class="ok"></i>可解碼</span></p>{pass_chart(passes)}</div></article>'
-        f'<article class="panel chart"><div class="panel__body"><h3>SNR 分箱</h3><p class="legend"><span><i></i>全部封包</span><span><i class="ok"></i>可解碼</span></p>{snr_chart(packets)}</div></article>'
+        f'<article class="panel chart"><div class="panel__body"><h3>每場次封包</h3><p class="legend"><span><i></i>封包數</span></p>{pass_chart(passes)}</div></article>'
+        f'<article class="panel chart"><div class="panel__body"><h3>SNR 分箱</h3><p class="legend"><span><i></i>封包數</span></p>{snr_chart(packets)}</div></article>'
         "</div>"
     )
 
@@ -837,8 +833,8 @@ def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], d
     last = decodable[0] if decodable else None
     latest_pass = passes[0] if passes else None
     cards = render_cards([
-        (f"{len(decodable):,}<small> / {len(packets):,}</small>", "可解碼 IoT 封包／全部封包", ""),
-        (escape(last.local) if last else "—", "最後可解碼封包時間", ""),
+        (f"{len(packets):,}", "IoT 封包", ""),
+        (escape(last.local) if last else "—", "最後封包時間", ""),
         (f"{len(passes):,}", "過境場次（10/01 起）", ""),
         ((escape(latest_pass.pass_local) + f"<br><small>TCA {fmt_number(latest_pass.tca_ele)}°，{latest_pass.n_packets} 包</small>") if latest_pass else "—", "最新一場過境", ""),
     ])
@@ -849,27 +845,27 @@ def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], d
     ]
     links = "".join(
         devlink(f"#riot/{d.key}", RIOT_COLOR, escape(d.label or d.key), d.key,
-                f'<span class="mono">{escape(d.last_correct_local or "—")}</span><small>最後可解碼 · {d.n_crc_ok:,}/{d.n_packets:,} 包</small>')
+                f'<span class="mono">{escape(d.last_correct_local or "—")}</span><small>最後封包 · {d.n_packets:,} 包</small>')
         for d in known
     )
     if other:
         links += (
             f'<div class="devlink devlink--static"><i class="devlink__dot" style="background:var(--ink-muted)"></i>'
             f'<span class="devlink__main"><strong>{escape(other.label)}</strong><span class="mono">—</span></span>'
-            f'<span class="devlink__status"><span class="mono">{other.n_packets:,} 包</span><small>地址無法解碼</small></span></div>'
+            f'<span class="devlink__status"><span class="mono">{other.n_packets:,} 包</span><small>未登錄地址</small></span></div>'
         )
     dash = (
         cards
         + grid2(
-            hubcard("位置", "各裝置最後一筆可解碼封包之座標（Esri 衛星影像）", map_div(points, 15)),
+            hubcard("位置", "各裝置最後一筆封包之座標（Esri 衛星影像）", map_div(points, 15)),
             hubcard("裝置", "點選進入各裝置儀表板", f'<div class="devlist">{links}</div>'),
         )
         + grid2(
             predicted_card(predicted, now),
             hubcard("最近過境", "鐳洋平台檔案清單（實際接收場次）", riot_pass_list(passes)),
         )
-        + hubcard("訊號品質", "每場次封包數與可解碼數", f'<div class="chart chart--compact">{pass_chart(passes)}</div>', wide=True)
-        + hubcard("最近封包內容", "最近 10 包（含 CRC 失敗）；完整歷史見「封包內容」分頁。接收時間為過境時窗，非逐包接收時刻。",
+        + hubcard("訊號品質", "每場次封包數", f'<div class="chart chart--compact">{pass_chart(passes)}</div>', wide=True)
+        + hubcard("最近封包內容", "最近 10 包；完整歷史見「封包內容」分頁。接收時間為過境時窗，非逐包接收時刻。",
                   riot_messages_table(received, "鐳洋最近 10 筆封包", 10), wide=True)
     )
     out = [
@@ -879,7 +875,7 @@ def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], d
         tabpanel("dash", dash),
         tabpanel("passes", predicted_card(predicted, now, "未來 48 小時過境預測", 12, wide=True) + panel("逐場次（實際接收）", f"{len(passes)} 場，最新在上；原始檔可直接下載。", riot_passes_table(passes, "逐場次資料"))),
         tabpanel("quality", riot_charts(passes, packets)),
-        tabpanel("msgs", panel("封包內容", f"全部 {len(packets):,} 包；依接收場次與行號倒序，最近兩場展開。接收時間為過境時窗（UTC+8）；CRC 失敗時隱藏不可信解碼值。", riot_packet_contents(packets, "鐳洋封包內容"))),
+        tabpanel("msgs", panel("封包內容", f"全部 {len(packets):,} 包；依接收場次與行號倒序，最近兩場展開。接收時間為過境時窗（UTC+8）。", riot_packet_contents(packets, "鐳洋封包內容"))),
         "</section>",
     ]
     for d in known:
@@ -889,8 +885,8 @@ def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], d
         last = mine[0] if mine else None
         title = f'{escape(d.label or d.key)} <span class="mono">{escape(d.key)}</span>'
         cards = render_cards([
-            (f"{len(mine):,}<small> / {len(mine_all):,}</small>", "可解碼 IoT 封包／全部", ""),
-            (escape(last.local) if last else "—", "最後可解碼封包時間", ""),
+            (f"{len(mine):,}", "IoT 封包", ""),
+            (escape(last.local) if last else "—", "最後封包時間", ""),
             (f"{len(my_passes):,}", "出現的過境場次", ""),
             (f"{fmt_number(d.latest_voltage)} V", "最近電壓", "warn" if d.latest_voltage is not None and d.latest_voltage < 3.6 else ""),
         ])
@@ -916,16 +912,15 @@ def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], d
             ("最後過境場次", escape(last.pass_local) if last else "—"),
             ("下次過境（預測）", next_pass_tile(predicted.get("riot") or {}, now)),
             ("最後平台檔", f'<a href="raw/{quote(last.file)}" download>{escape(last.file)}</a>' if last else "—"),
-            ("可解碼比例", f"{len(mine) / len(mine_all):.0%}" if mine_all else "—"),
         ])
         dash = (
             cards
             + grid2(
-                hubcard("位置", "大點為最後可解碼封包位置，小點為先前位置", map_div(pts, 17)),
-                hubcard("裝置狀態", "採最新可解碼封包", status),
+                hubcard("位置", "大點為最後封包位置，小點為先前位置", map_div(pts, 17)),
+                hubcard("裝置狀態", "採最新封包", status),
             )
             + predicted_card(predicted, now, "下次過境預測", 5, wide=True)
-            + hubcard("最近封包內容", "最近 10 包（含 CRC 失敗）；CRC 失敗之裝置歸屬僅依收到的地址 bytes 暫列，未經驗證。", riot_messages_table(mine_all, f"{d.key} 最近封包", 10), wide=True)
+            + hubcard("最近封包內容", "最近 10 包；完整歷史見「封包內容」分頁。", riot_messages_table(mine_all, f"{d.key} 最近封包", 10), wide=True)
         )
         config = render_tiles([
             ("名稱", escape(d.label or "—")),
@@ -933,12 +928,11 @@ def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], d
             ("上行衛星", "BLACK KITE-2"),
             ("地面平台", "鐳洋 RIoT-2 M9"),
             ("資料來源", "鐳洋平台每場過境 UART 紀錄檔"),
-            ("封包驗證", "CRC-8（poly 0x31）"),
         ])
         out += [
             view_open(f"riot/{d.key}", "鐳洋 NODE · 裝置", title, [("dash", "儀表板"), ("msgs", "封包內容"), ("passes", "過境"), ("config", "設定")]),
             tabpanel("dash", dash),
-            tabpanel("msgs", panel("封包內容", f"全部 {len(mine_all):,} 包；最近兩場展開。CRC 失敗之裝置歸屬僅依收到的地址 bytes 暫列，未經驗證；解碼值不可信，已隱藏。", riot_packet_contents(mine_all, f"{d.key} 封包內容"))),
+            tabpanel("msgs", panel("封包內容", f"全部 {len(mine_all):,} 包；最近兩場展開。", riot_packet_contents(mine_all, f"{d.key} 封包內容"))),
             tabpanel("passes", predicted_card(predicted, now, "未來 48 小時過境預測", 12, wide=True) + panel("過境（實際接收）", f"此裝置出現在 {len(my_passes)} 場過境。", riot_passes_table(my_passes, f"{d.key} 過境"))),
             tabpanel("config", hubcard("設定", "裝置登錄資訊（靜態）", config, wide=True)),
             "</section>",
@@ -1196,8 +1190,8 @@ def render_overview(passes, packets, devices, units, records, predicted: Dict[st
     online = [link for link in links if link.get("active")]
     fixed = [u for u in units if gps_fix(u)]
     cards = render_cards([
-        (f"{len(decodable):,}", "鐳洋可解碼 IoT 封包", ""),
-        (escape(decodable[0].local) if decodable else "—", "鐳洋最後可解碼封包", ""),
+        (f"{len(decodable):,}", "鐳洋 IoT 封包", ""),
+        (escape(decodable[0].local) if decodable else "—", "鐳洋最後封包", ""),
         (f'{len(fixed)}<small> / {len(units)}</small>', "FOSSA 有 GPS 定位", "signal" if fixed else "warn"),
         (f'{len(online)}<small> / {len(units)}</small>', "FOSSA 上線裝置", "signal" if online else "warn"),
     ])
@@ -1209,7 +1203,7 @@ def render_overview(passes, packets, devices, units, records, predicted: Dict[st
         for u in units if u["pos"] and in_taiwan(*u["pos"])
     ]
     devlinks = "".join(
-        devlink(f"#riot/{d.key}", RIOT_COLOR, escape(d.label or d.key), d.key, f'<span class="mono">{escape(d.last_correct_local or "—")}</span><small>鐳洋 Node · 最後可解碼</small>')
+        devlink(f"#riot/{d.key}", RIOT_COLOR, escape(d.label or d.key), d.key, f'<span class="mono">{escape(d.last_correct_local or "—")}</span><small>鐳洋 Node · 最後封包</small>')
         for d in known
     ) + "".join(
         devlink(f"#fossa/{u['serial']}", FOSSA_COLOR, escape(u["serial"]) + " " + pill("上線" if u["link"].get("active") else "未上線", bool(u["link"].get("active"))),
@@ -1225,8 +1219,8 @@ def render_overview(passes, packets, devices, units, records, predicted: Dict[st
     riot_status = render_tiles([
         ("最新一場過境", escape(latest.pass_local) if latest else "—"),
         ("TCA 仰角／方位", f"{fmt_number(latest.tca_ele)}°／{fmt_number(latest.tca_azi)}°" if latest else "—"),
-        ("最新一場封包／可解碼", f"{latest.n_packets}／{latest.n_crc_ok}" if latest else "—"),
-        ("最近 24 小時", f"{len(recent)} 場 · {recent_ok} 包可解碼"),
+        ("最新一場封包", f"{latest.n_packets}" if latest else "—"),
+        ("最近 24 小時", f"{len(recent)} 場 · {recent_ok} 包"),
         ("下次過境預測（TLE）", next_pass_tile(predicted.get("riot") or {}, now)),
     ])
     last_cell = max((float(link.get("last_cell_connection_ms") or 0) for link in links), default=0)
@@ -1254,14 +1248,13 @@ def render_compare(comparison: Sequence[DailyComparison], units: Sequence[dict])
         (
             f'<th scope="row" class="mono">{escape(item.date)}</th>',
             f'<td class="number">{item.riot_total:,}</td>',
-            f'<td class="number good">{item.riot_valid:,}</td>',
         )
         for item in reversed(comparison)
     ]
-    table = render_table(("日期", "鐳洋收到", "鐳洋可解碼"), rows, "鐳洋每日接收")
+    table = render_table(("日期", "鐳洋收到"), rows, "鐳洋每日接收")
     return (
         view_open("compare", "CROSS-NETWORK", "鐳洋 vs FOSSA 對照", [],
-                  "鐳洋側看封包是否經衛星送達並可解碼（CRC-8）；FOSSA 側只看各台有沒有 GPS 定位。同址之 RSSI／SNR／送達率比較待兩側同址部署後建立。")
+                  "鐳洋側看封包是否經衛星送達；FOSSA 側只看各台有沒有 GPS 定位。同址之 RSSI／SNR／送達率比較待兩側同址部署後建立。")
         + hubcard("FOSSA GPS 定位狀態", "IoT Hub 最後位置回報", gps_status_list(units), wide=True)
         + panel("鐳洋每日接收", "最新日期在上。", table)
         + "</section>"
@@ -1332,13 +1325,31 @@ def prepare_public(files: Sequence[SourceFile], summary: Path, packets: Path) ->
     for pattern in ("*_M9_passes_summary.csv", "*_M9_passes_packets.csv"):
         for old_csv in PUBLIC_DIR.glob(pattern):
             old_csv.unlink()
-    shutil.copy2(summary, PUBLIC_DIR / summary.name)
-    shutil.copy2(packets, PUBLIC_DIR / packets.name)
+    publish_csv(summary, PUBLIC_DIR / summary.name)
+    publish_csv(packets, PUBLIC_DIR / packets.name)
     shutil.copy2(FILES_JSON, PUBLIC_DIR / "files.json")
     for item in files:
         source = PASS_DIR / item.file
         if source.is_file():
             shutil.copy2(source, raw_dir / item.file)
+
+
+def publish_csv(source: Path, target: Path) -> None:
+    """Copy a 鐳洋 CSV for download with the same CRC filter the page uses."""
+    with source.open(encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        fields = [name for name in (reader.fieldnames or []) if name not in {"crc_ok", "n_crc_ok"}]
+        rows = []
+        for row in reader:
+            if "crc_ok" in row and row.get("crc_ok", "").strip().lower() not in {"1", "true", "yes"}:
+                continue
+            if "n_crc_ok" in row:
+                row["n_packets"] = row.get("n_crc_ok", "0")
+            rows.append({name: row.get(name, "") for name in fields})
+    with target.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
 
 
 def write_text_atomic(path: Path, content: str) -> None:
@@ -1411,7 +1422,7 @@ def main() -> None:
     write_text_atomic(PUBLIC_DIR / "index.html", html)
     print(
         f"dashboard -> {PUBLIC_DIR / 'index.html'} "
-        f"({len(passes)} passes, {len(packets)} packets, {sum(row.crc_ok for row in packets)} CRC ok, "
+        f"({len(passes)} passes, {len(packets)} packets, "
         f"{len(fossa_records)} FOSSA messages)"
     )
 
