@@ -1042,7 +1042,23 @@ def _power(value: object) -> str:
     return f'{volts("battVolt")}／{volts("bus3Volt")}／{volts("bus5Volt")}'
 
 
-def fossa_host_tiles(link: Dict[str, object]) -> str:
+def fossa_sat_delivery(unit: dict) -> Tuple[int, str]:
+    """(經衛星送達筆數, 最後衛星 RX 時間)：以 Hub 封包紀錄的衛星 RX 為準，沒有時退回 Hub 狀態 lastSatPacket。"""
+    sats = sorted(r.sat_local for r in unit.get("records", ()) if r.sat_local)
+    if sats:
+        return len(sats), sats[-1]
+    link = unit.get("link") or {}
+    return 0, (_hub_time(link.get("last_sat_packet_s")) if link.get("last_sat_packet_s") else "")
+
+
+def fossa_sat_label(unit: dict) -> str:
+    count, last = fossa_sat_delivery(unit)
+    if count:
+        return f"經衛星送達 {count} 筆 · 最後 {last}"
+    return f"最後衛星封包 {last}" if last else "尚無衛星封包"
+
+
+def fossa_host_tiles(link: Dict[str, object], unit: Optional[dict] = None) -> str:
     return render_tiles([
         ("裝置時間", escape(_hub_time(link.get("status_time_s")))),
         ("最後行動網路連線", escape(_hub_time(link.get("last_cell_connection_ms"), millis=True))),
@@ -1054,7 +1070,7 @@ def fossa_host_tiles(link: Dict[str, object]) -> str:
         ("電源（電池／3V3／5V）", _power(link.get("power"))),
         ("衛星 RX 封包計數", _plain(link.get("rx_packet_count"))),
         ("TX 佇列", _plain(link.get("tx_queue_len"))),
-        ("最後衛星接收", escape(_hub_time(link.get("last_sat_packet_s")))),
+        ("經衛星送達", escape(fossa_sat_label(unit)) if unit else escape(_hub_time(link.get("last_sat_packet_s")))),
         ("下次過境估計", escape(_hub_next_pass(link.get("next_pass_s")))),
     ])
 
@@ -1114,7 +1130,7 @@ def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], co
     ) or '<p class="muted">尚未登錄裝置。</p>'
     passlist = "".join(
         f'<li><span class="when">{escape(_hub_next_pass(u["link"].get("next_pass_s")))}</span><span class="mono">{escape(u["serial"])}</span>'
-        f'<span class="number">{"最後衛星封包 " + _hub_time(u["link"].get("last_sat_packet_s")) if u["link"].get("last_sat_packet_s") else "尚無衛星封包"}</span></li>'
+        f'<span class="number">{escape(fossa_sat_label(u))}</span></li>'
         for u in units if u["link"]
     ) or '<li><span class="muted">尚未拉取 IoT Hub 狀態；設定 FOSSA_HUB_EMAIL／FOSSA_HUB_PASSWORD 後由排程自動更新。</span></li>'
     dash = (
@@ -1158,7 +1174,7 @@ def render_fossa_views(units: Sequence[dict], records: Sequence[FossaRecord], co
         pts += fossa_gps_points(u["records"], serial)
         dash = (
             cards
-            + grid2(hubcard("位置", map_note, map_div(pts, 17)), hubcard("主機狀態", "IoT Hub 最後狀態回報", fossa_host_tiles(link) if link else '<p class="muted">尚未拉取 IoT Hub 狀態。</p>'))
+            + grid2(hubcard("位置", map_note, map_div(pts, 17)), hubcard("主機狀態", "IoT Hub 最後狀態回報", fossa_host_tiles(link, u) if link else '<p class="muted">尚未拉取 IoT Hub 狀態。</p>'))
             + hubcard("最近封包內容", raw_note, fossa_messages_table(u["records"][:10], f"{serial} 最近 10 筆封包內容", units), wide=True)
         )
         config = render_tiles([
