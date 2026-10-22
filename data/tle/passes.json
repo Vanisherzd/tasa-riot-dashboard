@@ -1,6 +1,6 @@
 {
- "generated_at": "2026-10-22 06:05:24",
- "start": "2026-10-22 06:05:24",
+ "generated_at": "2026-10-22 14:19:25",
+ "start": "2026-10-22 14:19:25",
  "hours": 48.0,
  "riot": {
   "label": "BLACK KITE-2",
@@ -9,7 +9,7 @@
   ],
   "source": "鐳洋平台 /api/tle",
   "tle_epoch": "2026-10-21 15:05:27",
-  "tle_age_h": 15.0,
+  "tle_age_h": 23.2,
   "site": {
    "name": "清大校園",
    "lat": 24.79385,
@@ -18,19 +18,6 @@
   },
   "min_max_el": 5.0,
   "passes": [
-   {
-    "sat": "Black Kite-2",
-    "aos": "2026-10-22 13:38:05",
-    "tca": "2026-10-22 13:43:52",
-    "los": "2026-10-22 13:49:39",
-    "tca_unix": 1792647832,
-    "duration_s": 694,
-    "max_el": 23.6,
-    "az_aos": 141,
-    "az_tca": 73,
-    "az_los": 6,
-    "in_uplink_window": true
-   },
    {
     "sat": "Black Kite-2",
     "aos": "2026-10-22 15:13:43",
@@ -120,6 +107,19 @@
     "az_aos": 2,
     "az_tca": 284,
     "az_los": 206,
+    "in_uplink_window": true
+   },
+   {
+    "sat": "Black Kite-2",
+    "aos": "2026-10-24 13:52:44",
+    "tca": "2026-10-24 13:58:49",
+    "los": "2026-10-24 14:04:54",
+    "tca_unix": 1792821529,
+    "duration_s": 730,
+    "max_el": 36.7,
+    "az_aos": 151,
+    "az_tca": 75,
+    "az_los": 0,
     "in_uplink_window": true
    }
   ],

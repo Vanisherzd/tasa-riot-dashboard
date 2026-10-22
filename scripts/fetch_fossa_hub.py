@@ -142,18 +142,22 @@ def snapshot_link(token: str, dev: dict) -> dict:
 
 def packet_to_record(link: dict, packet: dict) -> dict:
     """Webhook-like record so parse_fossa.py can read it; unknown fields are kept raw."""
+    # Hub packet: satTimestamp is 0 for cellular (GNwkService) packets and the satellite RX time (s)
+    # for FNwkService packets; createdAt (ms) is when the Hub stored it, i.e. cloud RX.
     body = {
         "mac": packet.get("mac") or link.get("link_mac") or "",
         "queue_timestamp": packet.get("queue_timestamp") or packet.get("queueTime"),
-        "sat_timestamp": packet.get("sat_timestamp") or packet.get("satRxTime"),
+        "sat_timestamp": packet.get("sat_timestamp") or packet.get("satRxTime") or packet.get("satTimestamp") or None,
         "rssi": packet.get("rssi"),
         "message": packet.get("message") or packet.get("payload"),
         "nodeId": packet.get("nodeId") or link.get("link_id"),
         "source": packet.get("source") or "satellite",
         "hub_raw": packet,
     }
+    created = packet.get("createdAt")
+    received_at = int(created / 1000) if isinstance(created, (int, float)) and created > 0 else None
     key = f"hub-{link.get('link_id')}-{packet.get('id') or packet.get('_id') or json.dumps(packet, sort_keys=True)[:64]}"
-    return {"key": key, "received_at": None, "content_type": "application/json", "body": body}
+    return {"key": key, "received_at": received_at, "content_type": "application/json", "body": body}
 
 
 def append_unique(path: Path, records: Iterable[dict]) -> int:

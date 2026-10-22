@@ -41,7 +41,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: data/fossa/messages.jsonl
-          key: fossa-messages-v1
+          key: fossa-messages-v2
       - name: Fetch FOSSA messages
         if: env.FOSSA_EXPORT_URL != ''
         run: python3 scripts/fetch_fossa.py
