@@ -1,0 +1,264 @@
+
+
+RFEB_SYS V5.08
+SN:RFeBp5-250005 Activate Success!
+[EEP0]:No FMod
+Start..
+>GPS:
+PFB 2 0
+FPGA APON M[2]B[0]
+>metal: debug:     registered generic bus
+registering: 0, name=ff310000.ipi
+registering: 1, name=41900000.shm
+
+
+Model     	: CommPL_8U R5_app
+FW Ver   	: 25110304
+App Ver   	: V1.0.0.20251105.101639
+I2C[1]-Mux1-EEPROM [0x50]: 
+ => Check Pass !
+I2C[0]-EEPROM_FMC [0x50]: 
+ => Check Pass !
+>spi 8a34043 jtag id [0x064D]
+spi 8a34043 product id [0x4043]
+spi 8a34043 HW Rev  [0x03]
+ LMX04832 reset and initial done !
+  [SPI_SEL_LMX2594_ALL]: output 4915.20 MHz config 
+[LMX2594_alive_wr][222] SEL_ID[0], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LMX2594_0]: pass-Lock
+[LMX2594_alive_wr][222] SEL_ID[1], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LMX2594_1]: pass-Lock
+[LMX2594_alive_wr][222] SEL_ID[2], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LMX2594_2]: pass-Lock
+RFDC_init Pass
+--------------------------------S-------------------------
+DC i1) DC_e[00 NCOFre[3600 AC[0]
+NTLMX2820 Mod: [0][0]
+LMX2820_RF1 Init: 
+............
+LMX2820_RF1 Locked
+LMX2820_RF2 Init: 
+............
+LMX2820_RF2 Locked
+RF3:[Rx][LO:10700MHz] RF4:[Tx][LO:8450MHz]
+Start Loop Back Test[0]
+.........Done........
+>switch OBC uart Rx connect to PSU_uart1
+0--0x0000000042000000) overlaps with rproc@40000000 (0x0000000040000000--0x0000000042000000)
+[    0.000000] Zone ranges:
+[    0.000000]   DMA32    [mem 0x0000000000000000-0x00000000ffffffff]
+[    0.000000]   Normal   [mem 0x0000000100000000-0x000000087fffffff]
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000000000000-0x000000003fffffff]
+[    0.000000]   node   0: [mem 0x0000000040000000-0x0000000041ffffff]
+[    0.000000   0 [mm 0x00000040000000x0000007feffff
+[   0000000]  ode  0: [em x0000000000000-x00000087ffo 0.0000] psci SM Caling onvn2[    0.000000] software IO TLB: mapped [mem 0x000000007bf00000-0x00000[    0.000000] Memory: 3687532K/4193280K available (13888K kernel code,n   0.0000] GIC:Adjuting CU inerfac baseto 0x0000f33332
+[   0.02744] id_mx: defult:32768 a: Bootd scondar proessor x00000000 [0x40fd03]
+[   0.57613]smp:Brough uc_NELINK/F_ROUE proocol amil
+[   0.15733] DA: peallocted 12 KiBGFP_ERNEe[    0.214412] HugeTLB registered 1.00 GiB page size,[    1.304970] cryptd: max_cpu_qlen set to 1000
+[    1.328753] DRBG: Continuing without Jitter RNG
+[    1.432351] raid6: neonx8   gen()  2127 MB/s
+[    1.500407] raid6: neonx8   xor()  1584 MB/s
+[    1.568477] raid6: neonx4   gen()  2172 MB/s
+[    1.636526] raid6: neonx4   xor()  1553 MB/s
+[    1.704606] raid6: neonx2   gen()  2066 MB/s
+[    1.772657] raid6: neonx2   xor()  1427 MB/s
+[    1.840727] raid6: neonx1   gen()  1761 MB/s
+[    1.908782] raid6: neonx1   xor()  1212 MB/s
+[    1.976852] raid6: int64x8  gen()  1356 MB/s
+[    2.044911] raid6: int64x8  xor()   773 MB/s
+[    2.112977] raid6: int64x4  gen()  1597 MB/s
+[    2.181039] raid6: int64x4  xor()   854 MB/s
+[    2.249107] raid6: int64x2  gen()  1397 MB/s
+[    2.317163] raid6: int64x2  xor()   749 MB/s
+[    2.385241] raid6: int64x1  gen()  1032 MB/s
+[    2.453284] raid6: int64x1  xor()   517 MB/s
+[    2.453323] raid6: using algorithm neonx4 gen() 2172 MB/s
+[    2.457291] raid6: .... xor() 1553 MB/s, rmw enabled
+[    2.462239] raid6: using neon recovery algorithm
+[    2.467363] iommu: Default domain type: Translated 
+[    2.471705] iommu: DMA domain TLB invalidation policy: strict mode 
+[    2.478171] SCSI subsystem initialized
+[    2.481818] usbcore: registered new interface driver usbfs
+[    2.487179] usbcore: registered new interface driver hub
+[    2.492470] usbcore: registered new deviceppscore: oftwre ver 5.36 - Coyrigt 20052007Rodolf Gioetti gior 2.7654] cockource Swiched o clcksurcearchsys_ounte
+[  ye, lnea)
+[   .642250 UP-Lit has tale entis: 204 (de [    4.674028] Freeing initrd memory: 42444K
+[    4.731452] Initialise system trusted keyrings
+[    4.731583] workingset: timestamp_bits=46 max_order=20 bucket_order=0
+[    4.737395] NFS: Registering the id_resolver key type
+[    4.741732] Key type id_resolver registered
+[    4.745952] Key type id_legacy registered
+[    4.749892] nfs4filelayout_init: NFSv4 File Layout Driver Registering...
+[    4.756560] nfs4flexfilelayout_init: NFSv4 Flexfile Layout Driver Registering...
+[    4.763952] jffs2: version 2.2. (NAND) (SUMMARY)  © 2001-2006 Red Ha[[    9.549520] rando: crngi   9.5524 urandm waseddroot@RFSOC:~# cd /run/media/mmcblk0p2
+root@RFSOC:/run/media/mmcblk0p2# 
+root@RFSOC:/run/media/mmcblk0p2# ./linux_app_a_spi2_2obc_v2.elf
+[INFO] socat started: socat -u - /dev/ttyUL1,raw,echo=0,b115200,cs8,parenb=0,cstopb=0
+Opening SPI communication interface
+Note: chip version is 0x10 (v1.0)
+CAL FW VERSION: 1
+CAL: started
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:0 phi:13
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:-1 phi:14
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:-1 phi:14
+-------------------------------------------------------------------
+Radio calibration completed:
+  RadioA: amp:-1 phi:14
+  RadioB: amp:0 phi:0
+  TX calibration params for rf_chain 0:
+  -- power:14	dac:3	mix:10	offset_i:0	offset_q:-94
+ -INFO: using legacy timestamp
+AGC: setting fdd_mode to 0
+ARB: dual demodulation disabled for all SF
+LoRa RX started.
+
+Received 1 packet(s):
+  RSSI: -113.4 dBm, SNR: -18.0 dB, Size: 19
+  Payload: CC 00 00 07 0E C2 2E 4C 48 29 23 2D 6A DB 92 FF 00 29 24 
+ERROR: wrong coding rate (0) - timestamp_counter_correction
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -18.8 dB, Size: 0
+  Payload: 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -16.5 dB, Size: 19
+  Payload: CC 00 00 03 0E C2 2D 3E 48 29 22 A1 6A DB 9A FF 00 4A 33 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -20.5 dB, Size: 19
+  Payload: CC 00 A3 BC 2B CB 55 A6 77 15 55 FD 99 FA 75 BB C9 E6 11 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -17.8 dB, Size: 19
+  Payload: CC 00 00 05 0E C2 30 2E 48 29 26 3B 6A DB 3E 68 00 25 0C 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -13.5 dB, Size: 19
+  Payload: CC 00 00 03 0E C2 2D 02 48 29 20 D7 6A DB 93 3B 00 2A 23 
+
+Received 1 packet(s):
+  RSSI: -104.4 dBm, SNR: -15.2 dB, Size: 19
+  Payload: CC 00 00 03 0E C2 2D 02 48 29 20 D7 6A DB 93 3B 00 2A 23 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -20.0 dB, Size: 19
+  Payload: CC F0 07 88 4C 27 2A 78 F1 68 F7 1A C4 AB 2E D5 F7 E3 5A 
+
+Received 1 packet(s):
+  RSSI: -104.4 dBm, SNR: -16.5 dB, Size: 19
+  Payload: CC 00 00 07 0E C2 2E EF 48 29 21 F1 6A CE 52 66 00 29 75 
+
+Received 1 packet(s):
+  RSSI: -104.4 dBm, SNR: -12.8 dB, Size: 19
+  Payload: CC 00 00 05 0E C2 2A C3 48 29 26 A6 6A DB 5A 75 00 25 CB 
+
+Received 1 packet(s):
+  RSSI: -104.4 dBm, SNR: -12.5 dB, Size: 19
+  Payload: CC 00 00 03 0E C2 2C 94 48 29 22 88 6A DB 93 B3 00 2A 40 
+
+Received 1 packet(s):
+  RSSI: -104.4 dBm, SNR: -12.2 dB, Size: 19
+  Payload: CC 00 00 03 0E C2 2C 94 48 29 22 88 6A DB 93 B3 00 2A 40 
+
+Received 1 packet(s):
+  RSSI: -104.4 dBm, SNR: -11.5 dB, Size: 19
+  Payload: CC 00 00 05 0E C2 2F C1 48 29 25 52 6A DB 68 98 00 25 BE 
+
+Received 1 packet(s):
+  RSSI: -103.4 dBm, SNR: -13.0 dB, Size: 19
+  Payload: CC 00 00 03 0E C2 2C C3 48
+Received 1 packet(s):
+  RSSI: -103.4 dBm, SNR: -15.8 dB, Size: 19
+  Payload: CC 00 00 03 0E C2 2D AE 48 29 22 6A 6A DB 22 25 00 2A 24 
+
+Received 1 packet(s):
+  RSSI: -104.4 dBm, SNR: -16.5 dB, Size: 19
+  Payload: CC 00 00 03 0E C2 2D AE 48 29 22 6A 6A DB 2A 25 00 4A 24 
+
+Received 1 packet(s):
+  RSSI: -103.4 dBm, SNR: -19.5 dB, Size: 19
+  Payload: CC C0 15 23 B9 0C 56 DF 6D 21 58 82 4B 39 F4 A6 3B CB 88 
+
+Received 1 packet(s):
+  RSSI: -103.4 dBm, SNR: -12.5 dB, Size: 19
+  Payload: CC 00 00 05 0E C2 22 CB 48 29 2A B7 6A DB 84 A5 00 24 D0 
+
+Received 1 packet(s):
+  RSSI: -104.4 dBm, SNR: -16.2 dB, Size: 19
+  Payload: CC 00 00 03 0E C2 2E 62 48 29 22 60 6A DB 30 36 00 2A EA 
+
+Received 1 packet(s):
+  RSSI: -104.4 dBm, SNR: -16.0 dB, Size: 19
+  Payload: CC 00 00 03 0E C2 2E 62 40 28 22 60 6C CB 38 36 00 4A F1 
+
+Received 1 packet(s):
+  RSSI: -103.4 dBm, SNR: -19.2 dB, Size: 19
+  Payload: CC 10 72 80 DA EC 8A 40 24 4C C9 AE 0C D9 20 15 88 08 66 
+
+Received 1 packet(s):
+  RSSI: -103.4 dBm, SNR: -15.8 dB, Size: 19
+  Payload: CC 00 00 05 0E C2 31 5A 48 29 27 1F 6A DB 92 CE 00 25 B4 
+
+Received 1 packet(s):
+  RSSI: -103.4 dBm, SNR: -14.2 dB, Size: 19
+  Payload: CC 00 00 01 0E C2 2C C3 48 29 25 AF 6A DB 92 E6 00 28 2E 
+
+Received 1 packet(s):
+  RSSI: -104.4 dBm, SNR: -16.2 dB, Size: 19
+  Payload: CC 00 00 03 0E C2 2F CA 48 29 22 44 6A CB 3E 46 00 2C 9D 
+
+Received 1 packet(s):
+  RSSI: -104.4 dBm, SNR: -17.2 dB, Size: 19
+  Payload: CC 00 00 03 0E C2 2F CA 48 29 22 44 6A CB 36 46 00 2C FD 
+
+Received 1 packet(s):
+  RSSI: -103.4 dBm, SNR: -18.0 dB, Size: 19
+  Payload: CC 00 00 05 0E C2 22 D7 58 39 22 D0 07 10 14 06 06 65 69 
+
+Received 1 packet(s):
+  RSSI: -103.4 dBm, SNR: -16.0 dB, Size: 19
+  Payload: CC 00 00 01 0E C2 31 99 48 29 24 03 6A D3 23 90 00 2E 78 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -11.8 dB, Size: 10
+  Payload: 80 79 05 21 22 A6 02 8C 64 1C 
+
+Received 1 packet(s):
+  RSSI: -104.4 dBm, SNR: -20.0 dB, Size: 19
+  Payload: CC 00 19 99 86 DB 59 E7 95 3E FE DE 6C F6 4A 39 66 15 F5 
+
+Received 1 packet(s):
+  RSSI: -104.4 dBm, SNR: -19.8 dB, Size: 19
+  Payload: CC 00 00 05 0E C2 A5 AF D8 F9 3C 87 33 36 8E 5E 56 63 FA 
+
+Received 1 packet(s):
+  RSSI: -104.4 dBm, SNR: -18.5 dB, Size: 19
+  Payload: CC 00 00 03 0E 02 20 9B 48 29 22 51 5A D6 60 76 50 2A F5 
+
+Received 1 packet(s):
+  RSSI: -104.4 dBm, SNR: -18.8 dB, Size: 19
+  Payload: CC 00 00 03 0E C2 2C 46 E8 25 F2 51 0A DB 6A 76 00 5A E6 
+PF0
+
+
+
+>-----------------------------------
+>PF0
+FPGA Auto POFF
+>RF1V5[0]
+>RF3V0[0]
+>RF5V0[0]
+>FPGA_PON[0]
+>
+
+>-----------------------------------
+>GPS:
