@@ -1,0 +1,410 @@
+
+
+RFEB_SYS V5.08
+SN:RFeBp5-250005 Activate Success!
+[EEP0]:No FMod
+Start..
+>GPS:
+PFB 2 0
+FPGA APON M[2]B[0]
+>metal: debug:     registered generic bus
+registering: 0, name=ff310000.ipi
+registering: 1, name=41900000.shm
+
+
+Model     	: CommPL_8U R5_app
+FW Ver   	: 25110304
+App Ver   	: V1.0.0.20251105.101639
+I2C[1]-Mux1-EEPROM [0x50]: 
+ => Check Pass !
+I2C[0]-EEPROM_FMC [0x50]: 
+ => Check Pass !
+>spi 8a34043 jtag id [0x064D]
+spi 8a34043 product id [0x4043]
+spi 8a34043 HW Rev  [0x03]
+ LMX04832 reset and initial done !
+  [SPI_SEL_LMX2594_ALL]: output 4915.20 MHz config 
+[LMX2594_alive_wr][222] SEL_ID[0], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LMX2594_0]: pass-Lock
+[LMX2594_alive_wr][222] SEL_ID[1], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LMX2594_1]: pass-Lock
+[LMX2594_alive_wr][222] SEL_ID[2], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LMX2594_2]: pass-Lock
+RFDC_init Pass
+-----------------------------------------------
+ADC PowerUp St90 amling Fequncy 4.911Gz
+ADC0 My300]
+  ADCT B0) DC_Moe[0] NLMX2820 Mod: [0][0]
+LMX2820_RF1 Init: 
+............
+LMX2820_RF1 Locked
+LMX2820_RF2 Init: 
+............
+LMX2820_RF2 Locked
+RF3:[Rx][LO:10700MHz] RF4:[Tx][LO:8450MHz]
+Start Loop Back Test[0]
+.........Done........
+>switch OBC uart Rx connect to PSU_uart1
+&jjÇ¬ÇÇÇÇÇÇÇ¢íÇÇÇÇÇÇJzŸï…±Ö¡Õ∫•—°í¡…ΩçÇÇÇÇÇÇÇBÇ¬ÇÇÇÇÇÇÇ¢ÇÇÇÇÇÇÇjjÇ¬ÇÇÇÇÇÇÇ¢íÇÇÇÇÇÇJj
+[    0.000000] Zone ranges:
+[    0.000000]   DMA32    [mem 0x0000000000000000-0x00000000ffffffff]
+[    0.000000]   Normal   [mem 0x0000000100000000-0x000000087fffffff]
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000000000000-0x000000003fffffff]
+[    0.000000]   node   0: [mem 0x000000004000000[    0.000000] On node 0, zone Normal: 25:1
+[   0.00000]Built  zonlists,mobiity grupin on.  otalpages:103140
+[   0.00000]Kernl c[    0.000000] software IO T[ctingCPUsfrom N_CPU=16 t nr_cu_ids4.
+[   0000000 rcu RCU clculted vauE] che_clock 56 its at33Mz, resoutio 30ns,wrap every21992325553ns[    r2: ootd secodaryprocesor 0000000002 0x410d034]
+[t, liear
+[    0.141433] pinctrl core: in]vr
+[    0.214402] HugeTLB registered 1.00 GiB page size, pre-allocatedr[    1.304877] cryptd: max_cpu_qlen set to 1000
+[    1.328680] DRBG: Continuing without Jitter RNG
+[    1.432353] raid6: neonx8   gen()  2125 MB/s
+[    1.500402] raid6: neonx8   xor()  1583 MB/s
+[    1.568471] raid6: neonx4   gen()  2174 MB/s
+[    1.636525] raid6: neonx4   xor()  1551 MB/s
+[    1.704598] raid6: neonx2   gen()  2066 MB/s
+[    1.772649] raid6: neonx2   xor()  1427 MB/s
+[    1.840725] raid6: neonx1   gen()  1761 MB/s
+[    1.908776] raid6: neonx1   xor()  1212 MB/s
+[    1.976855] raid6: int64x8  gen()  1355 MB/s
+[    2.044906] raid6: int64x8  xor()   773 MB/s
+[    2.112979] raid6: int64x4  gen()  1598 MB/s
+[    2.181027] raid6: int64x4  xor()   853 MB/s
+[    2.249104] raid6: int64x2  gen()  1397 MB/s
+[    2.317156] raid6: int64x2  xor()   749 MB/s
+[    2.385241] raid6: int64x1  gen()  1031 MB/s
+[    2.453277] raid6: int64x1  xor()   517 MB/s
+[    2.453316] raid6: using algorithm neonx4 gen() 2174 MB/s
+[    2.457283] raid6: .... xor() 1551 MB/s, rmw enabled
+[    2.462230] raid6: using neon recovery algorithm
+[    2.467349] iommu: Default domain type: Translated 
+[    2.471697] iommu: DMA domain TLB invalidation policy: strict mode 
+[    2.478157] SCSI subsystem initialized
+[    2.481808] usbcore: registered new interface driver usbfs
+[    2.487173] usbcore: registered new interface driver hub
+[    2.492457] usbcore: registered new device:Softare er. 53.6  Coprigt 205-207 RodlfoGiometi <iomtti@inu.4d o locksurcearc_sys_cuter
+[   258248] FS: isk quta dquTLite hshtable ntres: 048 ordr: 4, 656 byte, lnear
+[
+[    4.675111] Freeing initrd memory: 42444K
+[    4.732599] Initialise system trusted keyrings
+[    4.732730] workingset: timestamp_bits=46 max_order=20 bucket_order=0
+[    4.738488] NFS: Registering the id_resolver key type
+[    4.742962] Key type id_resolver registered
+[    4.747030] Key type id_legacy registered
+[    4.751037] nfs4filelayout_init: NFSv4 File Layout Driver Registering...
+[    4.757706] nfs4flexfilelayout_init: NFSv4 Flexfile Layout Driver Registering...
+[    4.765097] jffs2: version 2.2. (NAND) (SUMMARY)  ¬© 2001-2006 Red Hat, Inc.
+[    4.808199] NET: Registered PF_ALG protocol family
+[    4.808251] xor: measuring software checksum speed
+[    43   4.51008 io chedulr kyer regsterd
+[    4.882529] Serial be spplid
+[   4.97941] un: niversl TU/TAP dvi us-strage
+[   .965857 rt_zynqmpffa0000.rt: rgel rgisteed
+[   5.2553] Blueooth HCI URT potocolQCA egisteed
+    5.3075] uur (ITERRUP)
+[   5.89963 sdhci Seure DigtalHost Cotroler Intrfac drive
+[   5.09664]r[    5.159294] securefw securefw: securefw probed
+[    5.159435] zynqmp_aes fimqmprsa (znqmprsa)
+   5.20947] ubcore: egitered nw itenP_PAKET prool amily
+[    .27782] NT: Rgisterd PFKEY pr    5336157 802q: 8021Q VAN Supor8
+[   5.30[  .395693 prntk: botconole [cns0P1] xiinx-zyqmpdma fd50000dma-cntroler: ynqMP M5ler ZynMP DA drverProbe ucess
+[    5.520900 xi_) i  uartlie
+[    5.580805] ahci-ceva d0c000.aci[ c-cev
+[    5.64008] ta1:t0: Cadne GEM ev x5000106 a xff0e000irq 37(6a:d:0:cb:b92)dng nusd clock
+[    5.76483 ALSA evic list
+[   5.75444]  No su [    5.826104] mmc1: new high speed SDHC card at 10)
+[    5.970787] ata2: SATA link down (SStatus 0 SControl 310)
+[    5.976216] ata1: SATA link down (SStatus 0 SControl 310)
+[    5.982155] Freeing unused kernel memory: 2176K
+[    5.986746] Run /init as init process
+[    6.000398] systemd[6.10731] ysted[1]: ystmd 249.+01metaLinu 202.2_relaseS1007107 (oniste)[0mc[    6.122459] systibiity. Peaseupdatepack to iclud a natve sstemd nit ile, i to ake itmor s[ systmd-ssv-geneato[243]: ys[    6.443049] systemd[1]: Queued start job for default target Multi-User System.
+[    6.451152] random: systemd: uninitialized urandom read (16 bytes read)
+[    6.488015] systemd[1]: Created slice Slice /system/getty.
+[[0;32m  OK  [0m] Created slice [0;1;39mSlice /system/getty[0m.
+[ intialzed rando ead (16byes red)
+[    6.516619] systemd[1]: Created slice Slice /system/modprobe.
+[[0;32m  OK  [0m] Created slice [0;1;39Slice sysem/mdproe[m.
+[    6.537819] systemd[1]: Created slice Slice /system/serial-getty.
+[[0;32m  OK  [0m] Created slice [0;1;39mSlice /system/serial-g[ atch[0m
+[    6.608725] systemd[1]: Started Forward Password Requests to W[ 0m] eaced tare [0;1;9memoteFileSysems[0m
+[    6.668612] syed SeverActivain Socke[0.
+[    6.724604] systemd[1]: Reached target[ninitcl Comatibilty amed Ppe.[[0;[;139mJornalSocket(/de/log)0m.[    6.824887] systemd[1]: Listenin.64885]systmd[1]:Listning o udv Contol Soket.[[0;32m  OK  [0m][[    6.931115] systemd[1]: Mounting Huge Pages File System...
+      [[    6.975378] systemd[1]: Mounting Kernel Debug File System...
+         Mo
+[    7.033179] systemd[1]: Starting Load Kernel Module configfs...
+         Starting [0;1;39mLoad Kernel Mo[    7.071518] systemd[1]: Starting Load Ker[[    .11449] sytemd1]: Coditin chec reslted i Loa Kerne Moules beng kippountRoo and KrnelFile Sstems..
+              Starting[0;;39mAply ernel Vriales[0m..[    7.187497] systemd[1]: Star[    7.209099] systemd[1]: Started RPC Bind.
+[[0;32m  OK  [0m] Started [0;1;39[    7.269043] systemd[1]: Mounted Kernel Debug File System.
+[[0;32m yll.
+[    7.a[    7.396867] systemd[1]: proc-fs-nfsd.mount: Mounprossxtd,cd=itd [[[0;1;3;5;185DEPED[0m]Depedency aile for 0;1;9mNFS ountDaemon[0m.
+[    7.492558] systemd[1]: nfs-mountd.service: Job nfs-mountd.service/start failed with result 'dependency'.
+[    7.502[hckesltedinE otrl il ystm eiped.[    7.574721] systemdsultedtforrsistnt Srae rhia skiped.
+[    7.618271] systemd[1]: Starting Cre[Startig 01;9mtDviceNoe in dev0m..[[    7.725126] systemd[1]: Reached target Preparation for Loc [   7.77354] s[[    7.822701] systemd[1]: Starting Journal Service...
+         Starting [0;1;39mJournal Service[0m...
+[    7.841071] systemd[1]: Starting Ru[    7.866924] systemd[1]: Mounted /var/volatile.
+[[0;32m  OK  [0m] Mounted [0;1;39m/var/volatile[0m.
+[[[    7.925094] systemd[1]: Starting Load/Sav] sytemd[]: Cnditio chek resuted n Bindmoun volatle /ar/sp[[01;39mReuil Dynami Liner Cace[m...
+[    8.005390] systemd[1]: Started Jou Eents an Fils[0m.
+[[0;32m  OK  [0m] Finished [0;1;39mColdplug All udev Devices[0m.
+[[0;32m  OK  [0m] Finished [0;1;39mRebuil         Starting [0;1;39mNetwork Configuration[[e[0.
+         Starting [0;1;39mCreate Volatile Files and Directories[0m...
+[    8.242292] random: fast init done
+[[0;32m  OK  [0m] Finished [0;1;39mCreate Volatile Files and Directories[0m.
+[[0;32m  OK  [0m] Started [0;1;39mNetwork Configuration[0m.
+[[0;32m  OK  [0m] Listening on [0;1;39mLoad/Save RF ‚Ä¶itch Status /dev/rfkill Watch[0m.
+         Starting [0;1;39mRebuild Journal Catalog[0m...
+[    8.906022] macb ff0e0000.ethernet eth0: PHY [ff0e0000.ethernet-ffffffff:00] driver [Marvell 88E1510] (irq=POLL)
+[    8.916255] macb ff0e0000.ethernet eth0: configuring for phy/rgmii-id link mode
+         Starting [0;1;39mNetwork Name Resolution[0m...
+[    8.930689] pps pps0: new PPS source ptp0
+[    8.948146] macb ff0e0000.ethernet: gem-ptp-timer itere.
+         Starting [0;1;39mNetwork Time Synchronization[0m...
+         Starting [0[[0;32m  OK  [0m] Finished [0;1;39mRebuild Journal Catalog[0m.
+[[0;32m  OK  [0m] Finished [0;1;39mRecord System Boot/Shutdown in UTMP[0m.
+[[0;32m  OK  [0m] Started [0;1;39mNetwork Time Synchronization[0m.
+[[0;32m  OK  [0m] Started [0;1;39mNetwork Name Resolution[0m.
+[    9.544584] random: crng init done
+[    9.547989] random: 7 urandom warning(s) missed due to ratelimiting
+[[0;32m  OK  [0m] Finished [0;1;39mLoad/Save Random Seed[0m.
+[[0;32m  OK  [0m] Created slice [0;1;39mSlice /system/systemd-fsck[0m.
+[[0;32m  OK  [0m] Reached target [0;1;39mNetwork[0m.
+[[0;32m  OK  [0m] Reached target [0;1;39mHost and Network Name Lookups[0m.
+[[0;32m  OK  [0m] Reached target [0;1;39mSystem Time Set[0m.
+[[0;32m  OK  [0m] Started [0;1;39mNFS status monitor for NFSv2/3 locking.[0m.
+         Starting [0;1;39mFile System Check on /dev/mmcblk0p1[0m...
+         Starting [0;1;39mFile System Check on /dev/mmcblk0p2[0m...
+         Starting [0;1;39mFile System Check on /dev/mmcblk1p1[0m...
+         Starting [0;1;39mUpdate is Completed[0m...
+[[0;32m  OK  [0m] Finished [0;1;39mFile System Check on /dev/mmcblk0p1[0m.
+[[0;32m  OK  [0m] Finished [0;1;39mFile System Check on /dev/mmcblk0p2[0m.
+[[[0;32m  OK  [0m] Finished [0;1;39mUpdate is Completed[0m.
+[[0;32m  OK  [0m[[[0;32m  OK  [0m] Reached target [0;1;39mTimer Units[0m.
+[[0;32m[[[0;32m  OK  [0m] Reached target [0;1;39mBasic System[0m.
+            Mouting 0;1;9m/runmedi/mmcbl1p10m...[[0;32m  OK  [0m] Startedm[[0;32m  OK  [0m] Started [0;1;39mD-Bus System Mess[. Peaserun sck
+[   10.403870] lora-init[646]: start Lora app!
+         Startinartng [0;1;9mesets Ssem Actvit Log[0m..         Starting [0;1;39mUser Login i[[0;32m  OK  [0m] Mounted [0;1;39m/run/media/mmcblk0p1[0m.
+[[0;32m  OK  [0m] Started [0;1;39mLB: FS spportfo both lint an serer0m.
+[[r[[0;32m  OK  [0m] Started [0;1;39mGetty on tty1[0m.
+         Start [[0;32m  OK  [0m] Started [0;1;39mSerial Getty o targt [;1;39moginPrompt[0m
+[[0;32m  OK  [0m] Started [0;1;39minetd.busybox.service[0m.
+[S[[0;32m  OK  [0m] Started [0;1;39mUser Login [[0;32m  OK  [0m] Finished [0;1;39mRecord Runlevel Cha
+PetaLinux 2022.2_release_S10071807 RFSOC ttyPS0
+
+RFSOC login: root (automatic login)
+
+[   11.210831] audit: type=1006 audit(1637342373.207:2): pid=674 uid=0 old-auid=4294967295 auid=0 tty=(none) old-ses=4294967295 ses=1 res=1
+[   11.223168] audit: type=1300 audit(1637342373.207:2): arch=c00000b7 syscall=64 success=yes exit=1 a0=8 a1=ffffd03372a0 a2=1 a3=ffff93cdf6b0 items=0 ppid=1 pid=674 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=(none) ses=1 comm="(systemd)" exe="/lib/systemd/systemd" key=(null)
+[   11.249470] audit: type[   11.409360] lora-init[646]: Searching in /run/media/mmcblk0p1 ...
+[   11.411160] lora-init[646]: No sha256list files found in /run/media/mmcblk0p1
+[   11.412969] lora-init[646]: Searching in /run/media/mmcblk1p1 ...
+[   11.418798] lora-init[646]: No sha256list files found in /run/media/mmcblk1p1
+[   11.419084] lora-init[646]: No valid sha256 list found or no ELF executed in any storage.
+7[r[999;999H[6nroot@RFSOC:~# cd /run/media/mmcblk0p2
+root@RFSOC:/run/media/mmcblk0p2# 
+root@RFSOC:/run/media/mmcblk0p2# ./linux_app_a_spi2_2obc_v2.elf
+[INFO] socat started: socat -u - /dev/ttyUL1,raw,echo=0,b115200,cs8,parenb=0,cstopb=0
+Opening SPI communication interface
+Note: chip version is 0x10 (v1.0)
+CAL FW VERSION: 1
+CAL: started
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:0 phi:14
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:-1 phi:14
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:-1 phi:14
+-------------------------------------------------------------------
+Radio calibration completed:
+  RadioA: amp:-1 phi:14
+  RadioB: amp:0 phi:0
+  TX calibration params for rf_chain 0:
+--
+INFO: using legacy timestamp
+AGC: setting fdd_mode to 0
+ARB: dual demodulation disabled for all SF
+LoRa RX started.
+
+Received 1 packet(s):
+  RSSI: -114.4 dBm, SNR: -18.0 dB, Size: 9
+  Payload: 21 F5 00 01 15 23 47 A2 2E 
+
+Received 1 packet(s):
+  RSSI: -114.4 dBm, SNR: -20.5 dB, Size: 47
+  Payload: 40 CE E3 00 FC 00 18 05 02 BD 04 CB 60 71 EB C1 E5 8B 9D 8B 20 29 BE 9E FA A8 BB DC C4 09 84 9A 79 AB 03 2C EB 11 B5 6B EC 94 17 C4 A8 CE 3E 
+
+Received 1 packet(s):
+  RSSI: -113.4 dBm, SNR: -18.5 dB, Size: 19
+  Payload: CC 00 00 07 0E C2 2D 86 48 29 21 51 6A E3 7B A6 00 29 BB 
+
+Received 1 packet(s):
+  RSSI: -115.4 dBm, SNR: -10.2 dB, Size: 10
+  Payload: 80 79 0E 04 00 00 00 02 71 34 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -9.2 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -106.4 dBm, SNR: -7.8 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -106.4 dBm, SNR: -7.8 dB, Size: 9
+  Payload: 00 79 04 83 02 80 95 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -107.4 dBm, SNR: -8.5 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -107.4 dBm, SNR: -8.0 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -107.4 dBm, SNR: -7.5 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -9.0 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -106.4 dBm, SNR: -8.5 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -107.4 dBm, SNR: -10.2 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -107.4 dBm, SNR: -10.5 dB, Size: 9
+  Payload: 0A 16 74 16 57 C4 51 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -108.4 dBm, SNR: -9.8 dB, Size: 9
+  Payload: 03 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -107.4 dBm, SNR: -8.2 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -107.4 dBm, SNR: -7.5 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -106.4 dBm, SNR: -7.2 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -108.4 dBm, SNR: -7.5 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+Received 1 packet(s):
+  RSSI: -108.4 dBm, SNR: -11.2 dB, Size: 9
+  Payload: 99 E9 04 0A 02 80 15 12 2B 
+
+Received 1 packet(s):
+  RSSI: -110.4 dBm, SNR: -10.0 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -110.4 dBm, SNR: -10.8 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 DC E7 
+
+Received 1 packet(s):
+  RSSI: -109.4 dBm, SNR: -10.0 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -112.4 dBm, SNR: -9.5 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -110.4 dBm, SNR: -9.0 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -112.4 dBm, SNR: -9.5 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4D 
+
+Received 1 packet(s):
+  RSSI: -113.4 dBm, SNR: -10.5 dB, Size: 9
+  Payload: 06 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -113.4 dBm, SNR: -9.0 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -111.4 dBm, SNR: -9.8 dB, Size: 9
+  Payload: 20 79 0E 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -113.4 dBm, SNR: -9.0 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -114.4 dBm, SNR: -11.2 dB, Size: 9
+  Payload: 50 29 50 A3 AE 40 B9 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -109.4 dBm, SNR: -10.5 dB, Size: 56
+  Payload: 41 4C 02 02 A1 1E 04 DE 00 00 01 A1 88 ED E7 AD CF D1 D3 D5 DD B9 E3 E5 91 00 00 00 00 00 00 00 00 00 00 00 55 55 05 00 00 00 00 00 10 00 03 03 03 00 00 00 20 00 00 F4 
+
+Received 1 packet(s):
+  RSSI: -110.4 dBm, SNR: -8.8 dB, Size: 56
+  Payload: 41 4C 02 02 91 1D 04 DE 00 00 01 A1 88 ED F3 E3 CF D1 D3 D5 DD DF E3 E5 17 00 00 00 00 00 00 20 00 22 20 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 02 
+
+Received 1 packet(s):
+  RSSI: -112.4 dBm, SNR: -8.5 dB, Size: 56
+  Payload: 41 4C 02 02 A1 1E 04 DE 00 00 01 A1 88 EE 00 17 CF D1 D3 D5 DD DF E3 E5 37 00 00 00 00 00 00 00 00 00 80 00 00 00 00 00 00 00 00 80 00 00 00 00 00 00 00 00 00 00 00 64 
+
+Received 1 packet(s):
+  RSSI: -112.4 dBm, SNR: -10.5 dB, Size: 56
+  Payload: 41 4C 02 02 2C F9 05 E8 00 03 01 A1 88 EE 4B AF 8F D1 D3 D5 ED DF E3 E5 57 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 11 01 11 00 00 00 DE 
+
+Received 1 packet(s):
+  RSSI: -112.4 dBm, SNR: -9.8 dB, Size: 56
+  Payload: 41 4C 02 02 2C F9 05 E9 00 00 01 A1 88 EE 1C 24 CF D1 D3 D5 DD DF E3 E5 77 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 3F 
+
+Received 1 packet(s):
+  RSSI: -112.4 dBm, SNR: -8.2 dB, Size: 56
+  Payload: 41 4C 02 02 A1 1E 04 DE 00 00 01 A1 88 EE 24 B6 CF D1 D3 D5 DD DF E3 E5 97 00 00 00 00 00 00 00 00 00 00 00 00 00 04 00 00 00 00 00 00 00 00 00 00 00 09 00 00 00 04 8F 
+
+Received 1 packet(s):
+  RSSI: -115.4 dBm, SNR: -7.8 dB, Size: 10
+  Payload: 80 79 0D 04 00 00 00 02 71 07 
+
+Received 1 packet(s):
+  RSSI: -112.4 dBm, SNR: -11.0 dB, Size: 56
+  Payload: 41 4C 02 02 2C F9 05 29 CA C6 0D A1 88 EE 40 F8 0F DD D3 D5 DD DF E3 E5 57 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 66 06 00 00 00 00 23 
+
+Received 1 packet(s):
+  RSSI: -115.4 dBm, SNR: -7.8 dB, Size: 10
+  Payload: 80 79 0F 04 00 00 00 02 70 E5 
+
+Received 1 packet(s):
+  RSSI: -113.4 dBm, SNR: -9.8 dB, Size: 56
+  Payload: 41 4C 02 02 2C F8 04 E9 00 00 01 A1 88 EE 65 63 CF D1 D3 D5 DD DF E3 E5 97 00 00 00 00 00 00 00 00 00 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 EB 
+PF0
+
+
+
+>-----------------------------------
+>PF0
+FPGA Auto POFF
+>RF1V5[0]
+>RF3V0[0]
+>RF5V0[0]
+>FPGA_PON[0]
+>
+
+>-----------------------------------
+>GPS:
