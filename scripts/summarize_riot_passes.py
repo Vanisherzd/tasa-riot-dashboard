@@ -14,7 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import parse_riot_log as p  # noqa: E402
 
-KNOWN = ("cc000001", "cc000003", "cc000005", "cc000006", "cc000007")
+KNOWN = ("cc000001", "cc000002", "cc000003", "cc000004", "cc000005", "cc000006", "cc000007", "cc000010")
 
 
 def packets(path: Path) -> list[dict]:

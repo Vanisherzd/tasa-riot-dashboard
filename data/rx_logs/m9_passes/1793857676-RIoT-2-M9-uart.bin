@@ -1,0 +1,191 @@
+
+
+RFEB_SYS V5.08
+SN:RFeBp5-250005 Activate Success!
+[EEP0]:No FMod
+Start..
+>GPS:
+PFB 2 0
+FPGA APON M[2]B[0]
+>metal: debug:     registered generic bus
+registering: 0, name=ff310000.ipi
+registering: 1, name=41900000.shm
+
+
+Model     	: CommPL_8U R5_app
+FW Ver   	: 25110304
+App Ver   	: V1.0.0.20251105.101639
+I2C[1]-Mux1-EEPROM [0x50]: 
+ => Check Pass !
+I2C[0]-EEPROM_FMC [0x50]: 
+ => Check Pass !
+>spi 8a34043 jtag id [0x064D]
+spi 8a34043 product id [0x4043]
+spi 8a34043 HW Rev  [0x03]
+ LMX04832 reset and initial done !
+  [SPI_SEL_LMX2594_ALL]: output 4915.20 MHz config 
+[LMX2594_alive_wr][222] SEL_ID[0], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LMX2594_0]: pass-Lock
+[LMX2594_alive_wr][222] SEL_ID[1], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LMX2594_1]: pass-Lock
+[LMX2594_alive_wr][222] SEL_ID[2], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LMX2594_2]: pass-Lock
+RFDC_init Pass
+-----------------------------------------------
+ADC PowerUp St2ale0] Nq[2]  Mixr Freuenc: 131.N NC_Frq[3600 AGC0]
+AN1[K2]LMX2820 Mod: [0][0]
+LMX2820_RF1 Init: 
+............
+LMX2820_RF1 Locked
+LMX2820_RF2 Init: 
+............
+LMX2820_RF2 Locked
+RF3:[Rx][LO:10700MHz] RF4:[Tx][LO:8450MHz]
+Start Loop Back Test[0]
+.........Done........
+>switch OBC uart Rx connect to PSU_uart1
+000--0x0000000042000000) overlaps with rproc@40000000 (0x0000000040000000--0x0000000042000000)
+[    0.000000[    0.000000] [[    2.112972] raid6: int64x4  gen()  1598 MB/s[    4.675069] Freeing initrd memory: 42444K
+[    4.732644] Initialo[    7.678521] systemd[1]: [    9.493414] random: crng init done
+[    9.496835] random: 7 urandom warning(s) missed due to ratelimiting
+[[0;32m  OK  [0m] Finished [0;1;39mLoad/Save Random Seed[0m.
+[[0;32m  OK  [0m] Created slice [0;1;39mSlice /system/systemd-fsck[0m.
+[[0;32m  OK  [0m] Listening on [0;1;39mLoad/Save RF …itch Status /dev/rfkill Watch[0m.
+         Starting [0;1;39mFile System Check on /dev/mmcblk0p1[0m...
+         Starting [0;1;39mFile System Check on /dev/mmcblk0p2[0m...
+         Starting [0;1;39mFile System Check on /dev/mmcblk1p1[0m...
+         Starting [0;1;39mRebuild Journal Catalog[0m...
+         Starting [0;1;39mNetwork Name Resolution[0m...
+         Starting [0;1;39mNetwork Time Synchronization[0m...
+         Starting [0;1;39mRecord System Boot/Shutdown in UTMP[0m...
+[[0;32m  OK  [0m] Finished [0;1;39mFile System Check on /dev/mmcblk0p1[0m.
+[[0;32m  OK  [0m] Finished [0;1;39mFile System Check on /dev/mmcblk0p2[0m.
+[[0;32m  OK  [0m] Finisheo[[0;32m  OK  [0m] Finished [0;1;39mRecord System Boot/Shutdown in U p2[0...         Mounting [0;1;39m/run/media/mmcblk1p1[[[   10.225888] FAT-fs (mmcblk0p1): Volume was not properly[[   10.276899] FAT-fs (mmcblk0p2): Volume was not properly unmo[[[0;32m  OK  [0m] Reached target [0;1;39mNetwork[0m.
+[[0;32m  OK[Tim Snchroniaton[0.
+[[0;32m  OK  [0m] Reached target [0;1;39mSystem Initian[[0;32m  OK  [0m] Reached target [0;1;39mTimer Units[0m.
+[[0;32m  OK  [0[[[0;32m  OK  [0m] Reached target [0;1;39mBasic System[0m.
+[[0;32m  OK  [0m] Started [0;1;39mKernel L[[0;32m  OK  [0m] Started [0;1;39mSystem Logging Service[0m.
+[[0;32m  OK  [0m] Started [0;1;39mD-Bus System Message Bus[0m.
+[[0;32m  OK  [0m] Started [0;1;39mlora-init[0m.
+[   10.459435] lora-init[647]: start Lora ap         Starting [0;1;39mLSB: NF          Starting [0;1;39mPermit User Sessions[0m...
+         Starting [0;1;39mTarget Communication Framework agent[y Lgs[0.
+[[0;32m  OK  [0m] Finished [0;1;39mPermit User Sessions[0m.
+[[0[         Starting [0;1;39minetd.busybox.service[0m...
+         Starting [0;1;39mLSB: Kernel NFS server sup[[[0;32m OK [0m] eaced targt 0;1;39mogi Prompt[0.
+[[0;32m  OK e[[0;32m  OK  [0m] Started [0;1;39mUser Login Manag         Starting [0;1;39mRecord Runlevel Change in UTMP[0m...
+[[0;32m  OK  [0m] Finished [0;1;39mRecord Runlevel Change in UTMP
+PetaLinux 2022.2_release_S10071807 RFSOC ttyPS0
+
+RFSOC login: root (a[   11.236965] audit: type=1006 audit(1637342373.227:2): pid=675 uid=0 old-auid=4294967295 auid=0 tty=(none) old-ses=4294967295 ses=1 res=1
+[   11.249278] audit: type=1300 audit(1637342373.227:2): arch=c00000b7 syscall=64 success=yes exit=1 a0=8 a1=fffffcc570a0 a2=1 a3=ffffabbf86b0 items=0 ppid=1 pid=675 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=(none) ses=1 comm="(systemd)" exe="/lib/systemd/systemd" key=(null)[   11.464966] lora-init[647]: Searching in /run/media/mmcblk0p1 ...
+[   11.466692] lora-init[647]: No sha256list files found in /run/media/mmcblk0p1
+[   11.468559] lora-init[647]: Searching in /run/media/mmcblk1p1 ...
+[   11.474359] lora-init[647]: No sha256list files found in /run/media/mmcblk1p1
+[   11.474647] lora-init[647]: No valid sha256 list found or no ELF executed in any storage.
+7[r[999;999H[6nroot@RFSOC:~# cd /run/media/mmcblk0p2
+root@RFSOC:/run/media/mmcblk0p2# 
+root@RFSOC:/run/media/mmcblk0p2# ./linux_app_a_spi2_2obc_v2.elf
+[INFO] socat started: socat -u - /dev/ttyUL1,raw,echo=0,b115200,cs8,parenb=0,cstopb=0
+Opening SPI communication interface
+Note: chip version is 0x10 (v1.0)
+CAL FW VERSION: 1
+CAL: started
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:-1 phi:14
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:-1 phi:14
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:0 phi:14
+-------------------------------------------------------------------
+Radio calibration completed:
+  RadioA: amp:0 phi:14
+  RadioB: amp:0 phi:0
+  TX calibration params for rf_chain 0:
+  -- power:14	dac:3	mix:10	offset_i:0	offset_q:-94
+  TeINFO: using legacy timestamp
+AGC: setting fdd_mode to 0
+ARB: dual demodulation disabled for all SF
+LoRa RX started.
+
+Received 1 packet(s):
+  RSSI: -118.4 dBm, SNR: -9.2 dB, Size: 10
+  Payload: 80 79 0D 04 00 00 00 02 71 07 
+
+Received 1 packet(s):
+  RSSI: -120.4 dBm, SNR: -8.8 dB, Size: 10
+  Payload: 80 79 0E 04 00 00 00 02 71 34 
+
+Received 1 packet(s):
+  RSSI: -114.4 dBm, SNR: -10.2 dB, Size: 10
+  Payload: 80 79 0D 04 00 00 00 02 71 07 
+
+Received 1 packet(s):
+  RSSI: -113.4 dBm, SNR: -11.8 dB, Size: 9
+  Payload: 31 19 27 20 03 80 17 44 5A 
+
+Received 1 packet(s):
+  RSSI: -109.4 dBm, SNR: -10.5 dB, Size: 10
+  Payload: 80 6B 31 44 40 40 00 02 73 5B 
+ERROR: wrong coding rate (0) - timestamp_counter_correction
+
+Received 1 packet(s):
+  RSSI: -109.4 dBm, SNR: -10.5 dB, Size: 0
+  Payload: 
+
+Received 1 packet(s):
+  RSSI: -106.4 dBm, SNR: -10.8 dB, Size: 10
+  Payload: B0 4A 35 02 00 00 00 05 FD 8D 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -19.0 dB, Size: 19
+  Payload: CC 00 00 07 0E C2 2C 29 42 2B 22 4E 6A FA 55 BE 1B 29 8D 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -19.2 dB, Size: 19
+  Payload: CC 00 7C C7 F5 22 85 37 1A 7A 59 3D 1C 93 67 CC F8 8C 66 
+
+Received 1 packet(s):
+  RSSI: -106.4 dBm, SNR: -10.8 dB, Size: 10
+  Payload: 80 79 0E 04 55 00 55 02 71 34 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -21.8 dB, Size: 7
+  Payload: 2B 32 03 A0 ED C6 09 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -17.5 dB, Size: 23
+  Payload: 00 01 00 00 00 00 00 00 00 21 00 20 12 00 D5 B3 70 64 56 5D 82 7F D1 
+
+Received 1 packet(s):
+  RSSI: -109.4 dBm, SNR: -13.8 dB, Size: 7
+  Payload: 22 55 02 00 01 02 52 
+
+Received 1 packet(s):
+  RSSI: -108.4 dBm, SNR: -14.2 dB, Size: 7
+  Payload: 22 55 02 00 01 02 52 
+[  555.668908] Internal error: synchronous external abort: 96000210 [#1] SMP
+[  555.675701] Modules linked in: uio_pdrv_genirq
+[  555.680136] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 5.15.36-xilinx-v2022.2 #1
+[  555.687433] Hardware name: ZynqMP ZCU111 RevA (DT)
+[  555.692208] pstate: 000000c5 (nzcv daIF -PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+[  555.699160] pc : uartlite_inle32+0x4/0x20
+[  555.703161] lr : ulite_isr+0xb0/0x28c
+[  555.706816] sp : ffff800008003e60
+[  555.710114] x29: ffff800008003e60 x28: ffff8000094d7758 x27: 0000000000000001
+[  555.717240] x26: ffff8000094d10 10: 0000000000221 x9: 0000000000000
+[  55.75999]
+
+>-----------------------------------
+>PF0
+FPGA Auto POFF
+>RF1V5[0]
+>RF3V0[0]
+>RF5V0[0]
+>FPGA_PON[0]
+>
+
+>-----------------------------------
+>GPS:

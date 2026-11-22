@@ -1,0 +1,302 @@
+
+
+RFEB_SYS V5.08
+SN:RFeBp5-250005 Activate Success!
+[EEP0]:No FMod
+Start..
+>GPS:
+PFB 2 0
+FPGA APON M[2]B[0]
+>metal: debug:     registered generic bus
+registering: 0, name=ff310000.ipi
+registering: 1, name=41900000.shm
+
+
+Model     	: CommPL_8U R5_app
+FW Ver   	: 25110304
+App Ver   	: V1.0.0.20251105.101639
+I2C[1]-Mux1-EEPROM [0x50]: 
+ => Check Pass !
+I2C[0]-EEPROM_FMC [0x50]: 
+ => Check Pass !
+>spi 8a34043 jtag id [0x064D]
+spi 8a34043 product id [0x4043]
+spi 8a34043 HW Rev  [0x03]
+ LMX04832 reset and initial done !
+  [SPI_SEL_LMX2594_ALL]: output 4915.20 MHz config 
+[LMX2594_alive_wr][222] SEL_ID[0], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LMX2594_0]: pass-Lock
+[LMX2594_alive_wr][222] SEL_ID[1], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LMX2594_1]: pass-Lock
+[LMX2594_alive_wr][222] SEL_ID[2], reg[04] =>[0x0C43]
+  Init [SPI_SEL_LMX2594_2]: pass-Lock
+RFDC_init Pass
+-----------------------------------------------
+ADC PowerUp Stptats: 1
+DC ile Stte: 5
+ADC0 Saue[0] xSel0] O[0]
+  DC(T0B2)LMX2820 Mod: [0][0]
+LMX2820_RF1 Init: 
+............
+LMX2820_RF1 Locked
+LMX2820_RF2 Init: 
+............
+LMX2820_RF2 Locked
+RF3:[Rx][LO:10700MHz] RF4:[Tx][LO:8450MHz]
+Start Loop Back Test[0]
+.........Done........
+>switch OBC uart Rx connect to PSU_uart1
+ÇjjÇ¬ÇÇÇÇÇÇÇ¢íÇÇÇÇÇÇJzŸï…±Ö¡Õ∫•—°í¡…ΩçÇÇÇÇÇÇÇBÇ¬ÇÇÇÇÇÇÇ¢ÇÇÇÇÇÇÇjjÇ¬ÇÇÇÇÇÇÇ¢íÇÇÇÇÇÇJj
+[    0.000000] Zone ranges:
+[    0.000000]   DMA32    [mem 0x0000000000000000-0x00000000ffffffff]
+[    0.000000]   Normal   [mem 0x0000000100000000-0x000000087fffffff]
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000000000000-0x000000003fffffff]
+[    0.000000]   node   0: [mem 0x0000000040000000-0x0000000041ffffff]
+[    0.000000]   node   0: [mem 0x0000000042000000-0x000000007fefffff]
+[    0.000000]   node   0: [mem 0x0[    0.000000] On node 0, zoum85719
+    .00000]Buit 1 zoelits, mbilty goupig o.  Totl pges:103940f[    0.000000] Memory: 3687532K/4193280K available (13888K kernel code,nit 573K ss, 43604Kresrved, 2214K cma-rsered)
+[_0x6d8 ithcrng_int=0
+[    .00000] arh_tieiar)
+    .04360] rc: Hierrchial SRU impementtion.
+[   0.04761] FI serice
+[    .10893] CU: Al CPU() s2
+[   0.1 altenativs: pachin kernl cod
+[ [dt: tye=200 audi(0.12:1): tateinitiaizedaudit_nabld=0 re=1
+    0.7148][tere 64.0 iB pge siz, pe-allocted  pages
+[    1.304968] cryptd: max_cpu_qlen set to 1000
+[    1.328788] DRBG: Continuing without Jitter RNG
+[    1.432347] raid6: neonx8   gen()  2126 MB/s
+[    1.500399] raid6: neonx8   xor()  1583 MB/s
+[    1.568461] raid6: neonx4   gen()  2172 MB/s
+[    1.636516] raid6: neonx4   xor()  1553 MB/s
+[    1.704586] raid6: neonx2   gen()  2065 MB/s
+[    1.772639] raid6: neonx2   xor()  1431 MB/s
+[    1.840718] raid6: neonx1   gen()  1762 MB/s
+[    1.908769] raid6: neonx1   xor()  1212 MB/s
+[    1.976833] raid6: int64x8  gen()  1355 MB/s
+[    2.044901] raid6: int64x8  xor()   773 MB/s
+[    2.112960] raid6: int64x4  gen()  1597 MB/s
+[    2.181030] raid6: int64x4  xor()   852 MB/s
+[    2.249099] raid6: int64x2  gen()  1397 MB/s
+[    2.317144] raid6: int64x2  xor()   746 MB/s
+[    2.385236] raid6: int64x1  gen()  1032 MB/s
+[    2.453273] raid6: int64x1  xor()   517 MB/s
+[    2.453312] raid6: using algorithm neonx4 gen() 2172 MB/s
+[    2.457283] raid6: .... xor() 1553 MB/s, rmw enabled
+[    2.462231] raid6: using neon recovery algorithm
+[    2.467357] iommu: Default domain type: Translated 
+[    2.471697] iommu: DMA domain TLB invalidation policy: strict mode 
+[    2.478165] SCSI subsystem initialized
+[    2.481806] usbcore: registered new interface driver usbfs
+[    2.487170] usbcore: registered new interface driver hub
+[    2.492461] usbcore: registered new device2] ps_cre: Sofwarever. .3.6  Copyight 005-207 RoolfoGiometi <:zed
+[   .57652] clcksoure: Sitchedto cocksouce ach_sysceris:2048 (oder 4, 553 byts, liear
+[   2.62241 UD-Li [    4.675186] Freeing initrd memory: 42444K
+[    4.733111] Initialise system trusted keyrings
+[    4.733249] workingset: timestamp_bits=46 max_order=20 bucket_order=0
+[    4.739007] NFS: Registering the id_resolver key type
+[    4.743413] Key type id_resolver registered
+[    4.747543] Key type id_legacy registered
+[    4.751549] nfs4filelayout_init: NFSv4 File Layout Driver Registering...
+[    4.758219] nfs4flexfilelayout_init: NFSv4 Flexfile Layout Driver Registering...
+[    4.765610] jffs2: version 2.2. (NAND) (SUMMARY)  ¬© 2001-2006 Red Hat, Inc.
+[    4.808290] NET: Registered PF_ALG protocol family
+[    4.808341] xor: measuring software checksum speed
+[    4 er m-dealine rgistred
+[   .851104 ioschedulr kber regste[tddevice(mtdev=nam/nuber) mut b suppled
+    4. egsterd new nterace drver sb-stoage[    .966]Bletooh: HCIUARTprotool Intl reistere
+[   5.06440 Bluetoth:HCI UAT prtocol [_cm: EV ff90000memorycontoller INTERUPT)[   5.09084] shci: ScureDigita Hos Contrlle[    5.160071] securefw securefw: securefw probed
+[    5.160211] zynqmp_aes firyed ew iterfac drver usbid
+    5.1565] usbhd: UB HID on proocolfamily
+[   5.27637] an: cotroler are netork cove
+[    .33941] 801q:802.1Q L[nsle [tyPS0]enabed
+[   5.96457]prink: booconsle [cds0] isable
+[   5.39457nller:ZynqP DMA rive Probesuccss
+[    5.464trollr: ZnqMP DA diver Prbe uccess[    5.497389:i a uarlite
+[    5.554798] 800b0000.serial: ttUL2 t MMIO0x80b0000 irq  62, bse_[    5.59605] aci-cva fd00000ahci: uppl targe notfound,usin dumm reguator[    5.604449] ahci.7[    5.690781] macb ff0e0000.ethernet eth0: Cadence GEM 3of_fs_ini
+[   5.77438 ofcfs_nit:OK[    5. .77539]mmc0 SDHC conlle on f16000.mc [f16[    5.823298] mmc1: new high speed SDHC card a[ MB, char (21:0)[    5.966734] ata2: SATA link down (SStatus 0 SControl 310)
+[    5.972163] ata1: SATA link down (SStatus 0 SControl[    5.996269] systemd[1]: -SMCK +SECOMP-GCRYT -GNTLS -PENSS +AC +BLKI -CUL -ELFTIL -FIDO -ID2 -IDN-IPT +KMOD-LIBRYPTSEUP +IBFDIS -PCE2 -PWUALIY -P11IT -RENCOD -BZP2 -
+Welcome to [1mPetaLinux 2022.2_release_S10071807 (honister)[0m!
+
+[    6.080693] syt[    6.132600] systemd-synertor[242: SsV serice 'etc/iit.d/atchog-int' laks a ntiv systed unt file Autmaticaly gneratig a nit fie fo compaide  natve sysemd nit fie, i orderto mke itmoresafe ad roust.n ysV serice'/etc/iit./dropber' acks a atie systed uit fil. Auomaticlly eneratng aunit ile fo comatibiity.Please pdae packae t includ a ative ssted unit ile in ordr t make i moe safe nd obust.[    6.453787] systemd[1]: Queued start job for default target Multi-User System.
+[    6.461901] random: systemd: uninitialized urandom read (16 bytes read)
+[    6.498628] systemd[1]: Created slice Slice /system/getty.
+[[0;32m  OK  [0m] Created slice [0;1;39mSlice /system/getty[0m.
+[    6.520684] random: systemd: uninitialized urandom read (16 bytes read)
+[    6.528629] systemd[1]: Created slice Slice /system/modprobe.
+[[0;32m  OK  [0m] Created slice [0;1;39mSlice /system/modprobe[0m.
+[    6.549834] systemd[1]: Created slice Slice /system/serial-getty.
+[[0;32m  OK  [0m] Created slice [0;1;39mSlice /system/serial-getty[0m.
+[    6.573714] systeion Slce.[[0;32m  OK  [0m] Creatd slce [01;39User ad Sesiowuess t Wal Diretor Watch[m.
+[    6.644769] systemd[1]: Reached targm [0;;9mSlic Unis[m.
+[    6.696633] systemd[1]: Reached target Swaps.
+[0m]Reachd arget 0;139mRC Pot Mpper0m.
+[    6.756860] systemd[1]:  OK [0] Listnin on [0;;39mournalAdit Soket0m.
+[    6.816812] systemd[[inkSocket
+[[0;32m  OK  [0] Liteningon 0;1;39Netwrk Serice etlin S[[    6.916827] systemd[1]: Listening on User Database Manager Socket.
+[[0[[    6.963193] systemd[1]: Mou  6.97388 systed[1] Mouning Krnel ebug ile Sstem..
+         Mounting [0;1;39mKe[    7.045150] systemd[1]: Starting LoadKerne Modue cofigfs..[[    7.103538] systemd[1]: Starting RPC Bind...
+6[    7.155481] systemd[1]: Starting RemounVaiabls...
+         Starting [0;1;39mApply ernel ariales[0...[    7.199[    7.221226] systemd[1]: Started m[0m.
+[    7.281058] systemd[1]: Mounted Kernel Debug File System.
+[[0;32m  OK  [0m] Mounted [0;1;39mKernel Debug File Systetvce: eactivted uccessull.
+[    7.330015] systemd[1]: Finished Load Kernel Module conft[    7.385274] systemd[1]: mod[    7.416893] systemd[1]: proc-fs-nfsd.mount: Mount process eSD cnfigrationfileystem.
+[[0;1;31mFAILED[0m]Fai[[    7.504561] systemd[1]: Dependency failed for NFS M5File Sstes.
+[[0;32m  OK  [0] Finised [0;1;3mRemuntyKernelVaribles[m.
+[    7.595336] systemd[1]: Con[[    7.628867] systemd[1]: Condition check resulted in Rebuil[[    7.694579] systemd[1]: Finished Create System Users.
+[[0;32m  OK  [0m] Finished tCeateStaic DeiceNodes n /ev.[[0;32m  OK  [0m] Finished[0;;39mCeateStatc DeiceNode in dev[0.
+[    7.756938] systemd[1]: Reached target Preparation for Local File Systems.
+ /var/olaile..
+         Mounting [0;1;39m/varvoltile[0m..
+[    7.804400] systemd[1]: Star[ waning isonl shown or he firunit sin IP firwaling.)
+[    72[    7.898963] systemd[1]: Mounted /var/volatile.
+[[0;32m  OK  [0m] Mounted [0;1;39m/var/volatile[0m.
+[    7.912959] systemd[1]: Condition check[[    7.964712] systemd[1]: Condition check resulted in Bindched trget[0;1;9mLoal Fil Sysems[0.
+[    8.019947] systemd[1]: Sta[    8.045704] systemd[1]: Started Journal Service.
+[[0;32m  OK  [0m] Start[32m OK  [m] Fne39mFush Jornalto Peristet Stoage[0...[    [         Starting [0;1;39mCreate Volatile Files and Directories[0m...
+[    8.305104] random: fast init done
+[[0;32m  OK  [0m] Finished [0;1;39mCreate Volatile Files and Directories[0m.
+         Starting [0;1;39mRebuild Journal Catalog[0m...
+         Starting [0;1;39mNetwork Time Synchronization[0m...
+         Starting [0;1;39mRecord System Boot/Shutdown in UTMP[0m...
+[[0;32m  OK  [0m] Finished [0;1;39mRebuild Journal Catalog[0m.
+[[0;32m  OK  [0m] Finished [0;1;39mRecord System Boot/Shutdown in UTMP[0m.
+[[0;32m  OK  [0m] Started [0;1;39mNetwork Configuration[0m.
+[    8.833328] macb ff0e0000.ethernet eth0: PHY [ff0e0000.ethernet-ffffffff:00] driver [Marvell 88E1510] (irq=POLL)
+[    8.843539] macb ff0e0000.ethernet eth0: configuring for phy/rgmii-id link mode
+[[0;32m  OK  [0m] Listening on [0;1;39mLoad/Save RF ‚Ä¶itch Status /dev/rfkill Watch[0m.
+[    8.866196] pps pps0: new PPS source ptp0
+[    8.879173] macb ff0e0000.ethernet: gem-ptp-timer ptp clock registered.
+         Starting [0;1;39mNetwork Name Resolution[0m...
+         Starting [0;1;39mUpdate is Completed[0m...
+[[0;32m  OK  [0m] Finished [0;1;39mUpdate is Completed[0m.
+[[0;32m  OK  [0m] Started [0;1;39mNetwork Time Synchronization[0m.
+[[0;32m  OK  [0m] Started [0;1;39mNetwork Name Resolution[0m.
+[    9.696115] random: crng init done
+[    9.699549] random: 7 urandom warning(s) missed due to ratelimiting
+[[0;32m  OK  [0m] Finished [0;1;39mLoad/Save Random Seed[0m.
+[[0;32m  OK  [0m] Created slice [0;1;39mSlice /system/systemd-fsck[0m.
+[[0;32m  OK  [0m] Reached target [0;1;39mNetwork[0m.
+[[0;32m  OK  [0m] Reached target [0;1;39mHost and Network Name Lookups[0m.
+[[0;32m  OK  [0m] Reached target [0;1;39mSystem Initialization[0m.
+[[0;32m  OK  [0m] Started [0;1;39mDaily Cleanup of Temporary Directories[0m.
+[[0;32m  OK  [0m] Reached target [0;1;39mSystem Time Set[0m.
+[[0;32m  OK  [0m] Reached target [0;1;39mTimer Units[0m.
+[[0;32m  OK  [0m] Listening on [0;1;39mD-Bus System Message Bus Socket[0m.
+[[0;32m  OK  [0m] Listening on [0;1;39mdropbear.socket[0m.
+[[0;32m  OK  [0m] Reached target [0;1;39mSocket Units[0m.
+[[0;32m  OK  [0m] Reached target [0;1;39mBasic System[0m.
+[[0;32m  OK  [0m] Started [0[[[0;32m  OK  [0m] Started [0;1;39mD-Bus System Message Bus[0m.
+[[0;32m  OK  [[0;32m  OK  [0m] Started [0;1;39mNFS status monitor for NFSv2m         Starting [0;1;39mFile System Check on /dev/mmcblk0p          Stating[0;1;3mFie Syste Chck on /ev/mcblk11[0...
+         Starting   Sartig [0;139marget CmmuicationFraework aent[0m...
+[[0;32m  :
+[[0;32m  OK  [0m] Finished [0;1;39mFile System Check on /[p1[0.
+[[0;32m  OK  [0m] Finished [0;1;39mPermit User Sessk         Mounting [0;1;39m/run/media/mmcblk0p2[0m...
+         Mounting [0;1;39m/run/media/mmcbl[[   10.631827] FAT-fs (mmcblk0p1): Volume was not properly unmounted. Some data may be corrupt. Please run fsck.
+         Starting [0;1;39mLSB: Kernel NFS server support[0m...
+[[0;32m  OK  [0m] Sta[[0;32m  OK  [0m] Reached target [0;1;39mLogin Prompts[0m.
+[   10.6[[0;32m  OK0[[0;32m  OK  [0m] Started [0;1;39minetd.busybox.service[0m.
+[[S[[0;32m  OK  [0m] Reached target [0;1;39mMulti-User System[0m.
+         Starting [0;1;39mRecord Runlevel[[0;32m  OK  [0m] Finished [0;1;39mRecord Runlevel Change in UTMP[0m.
+
+PetaLinux 2022.2_release_S10071807 RFSOC ttyPS0
+
+RFSOC login: root (automatic [   11.170011] audit: type=1006 audit(1637342373.171:2): pid=673 uid=0 old-auid=4294967295 auid=0 tty=(none) old-ses=4294967295 ses=1 res=1
+[   11.182310] audit: type=1300 audit(1637342373.171:2): arch=c00000b7 syscall=64 success=yes exit=1 a0=8 a1=ffffd76f0fb0 a2=1 a3=ffff8d2eb6b0 items=0 ppid=1 pid=673 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=(none) ses=1 comm="(systemd)" exe="/lib/systemd/systemd" k[   11.157105] lora-init[637]: Searching in /run/me in/runmedia/mcbl1p1
+   1116719] lor-ini[637]:No vlid sh256 ist fond r no EL exeuted i an storag.
+7[r[999;999H[6nroot@RFSOC:~# cd /run/media/mmcblk0p2
+root@RFSOC:/run/media/mmcblk0p2# 
+root@RFSOC:/run/media/mmcblk0p2# ./linux_app_a_spi2_2obc_v2.elf
+[INFO] socat started: socat -u - /dev/ttyUL1,raw,echo=0,b115200,cs8,parenb=0,cstopb=0
+Opening SPI communication interface
+Note: chip version is 0x10 (v1.0)
+CAL FW VERSION: 1
+CAL: started
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:-2 phi:14
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:-1 phi:14
+
+sx125x_cal_rx_image: rf_chain:0, freq_hz:922500000, loopback:1, radio_type:2
+sx125x_cal_rx_image, RESULT: rf_chain:0 amp:-1 phi:14
+-------------------------------------------------------------------
+Radio calibration completed:
+  RadioA: amp:-1 phi:14
+  RadioB: amp:0 phi:0
+  TX calibration params for rf_chain 0:
+  -- power:14	dac:3	mix:10	offset_i:0	offset_q:-94
+  INFO: using legacy timestamp
+AGC: setting fdd_mode to 0
+ARB: dual demodulation disabled for all SF
+LoRa RX started.
+
+Received 1 packet(s):
+  RSSI: -110.4 dBm, SNR: -11.2 dB, Size: 56
+  Payload: 41 4C 02 02 A1 1E 04 88 00 33 07 A1 C9 50 41 1A CF D1 D3 D5 DD DF E3 E5 97 00 00 00 00 00 00 00 00 00 00 10 00 00 00 00 00 00 02 00 20 00 00 00 00 00 00 00 90 09 09 2B 
+
+Received 1 packet(s):
+  RSSI: -110.4 dBm, SNR: -9.8 dB, Size: 56
+  Payload: 41 4C 02 02 A1 1E 04 DE 00 00 01 A1 C9 50 4E 4E CF D1 D3 D5 DD DF E3 E5 17 00 00 00 06 40 26 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 6C 
+
+Received 1 packet(s):
+  RSSI: -103.4 dBm, SNR: -11.2 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -9.0 dB, Size: 9
+  Payload: 00 79 04 03 02 80 15 D4 4B 
+
+Received 1 packet(s):
+  RSSI: -103.4 dBm, SNR: -12.5 dB, Size: 19
+  Payload: CC 00 00 01 0D B1 73 E8 47 9C 87 B9 6A F3 B0 25 00 28 B8 
+
+Received 1 packet(s):
+  RSSI: -103.4 dBm, SNR: -15.5 dB, Size: 19
+  Payload: CC 00 00 01 0D B1 73 F8 E7 9C 8A 79 0A EB 3E 35 10 4E 31 
+
+Received 1 packet(s):
+  RSSI: -103.4 dBm, SNR: -16.2 dB, Size: 19
+  Payload: CC 00 00 01 0D B1 75 35 57 9C 8A EB 6C 33 CC 4D 00 2E 2D 
+
+Received 1 packet(s):
+  RSSI: -103.4 dBm, SNR: -18.5 dB, Size: 19
+  Payload: CC 00 00 01 0D B1 65 5C 4D 87 30 D7 4E 77 9E 15 00 28 D7 
+
+Received 1 packet(s):
+  RSSI: -103.4 dBm, SNR: -18.0 dB, Size: 19
+  Payload: CC 00 08 89 8D B4 14 F2 21 92 EB FE 6A 55 EB 65 00 3F 32 
+
+Received 1 packet(s):
+  RSSI: -104.4 dBm, SNR: -10.8 dB, Size: 10
+  Payload: 88 71 86 04 00 00 00 A3 BD 16 
+
+Received 1 packet(s):
+  RSSI: -104.4 dBm, SNR: -17.5 dB, Size: 19
+  Payload: CC 00 00 01 0D B1 73 CA 47 94 0C C9 6A 72 DD 53 00 38 BE 
+
+Received 1 packet(s):
+  RSSI: -103.4 dBm, SNR: -18.8 dB, Size: 19
+  Payload: CC C0 84 C9 0D 31 FE 87 29 92 12 91 0C 92 ED 8E 00 2C C8 
+
+Received 1 packet(s):
+  RSSI: -105.4 dBm, SNR: -19.0 dB, Size: 19
+  Payload: CC 00 00 07 0E C2 9F 71 43 22 22 0A E2 73 15 E6 18 02 F0 
+PF0
+
+
+
+>-----------------------------------
+>PF0
+FPGA Auto POFF
+>RF1V5[0]
+>RF3V0[0]
+>RF5V0[0]
+>FPGA_PON[0]
+>
+
+>-----------------------------------
+>GPS:

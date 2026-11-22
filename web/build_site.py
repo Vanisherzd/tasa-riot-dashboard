@@ -48,7 +48,11 @@ KNOWN_DEVICES: Final = (
     ("cc000005", "蚵棚"),
     ("cc000006", "本組第一塊 Node"),
     ("cc000007", "登山"),
+    ("cc000002", "感測 Node 02"),
+    ("cc000004", "感測 Node 04"),
+    ("cc000010", "感測 Node 10"),
 )
+EVENT_COLOR: Final = "#ff5d5d"
 
 
 @dataclass(frozen=True)
@@ -94,6 +98,53 @@ class PacketRow:
     size: int
     line: int = 0
     hex: str = ""
+
+    @property
+    def alert_count(self) -> Optional[int]:
+        """Byte 19 of a 20 B compact packet (cumulative alert entries, 255 = 255 or more); None for 19 B packets."""
+        if self.size != 20:
+            return None
+        try:
+            raw = bytes.fromhex(self.hex.replace(" ", ""))
+        except ValueError:
+            return None
+        return raw[19] if len(raw) == 20 else None
+
+
+@dataclass(frozen=True)
+class AlertEvent:
+    row: PacketRow
+    added: Optional[int]  # new alert entries since the device's previous 20 B packet; None = cannot tell
+    status: str
+    since: str  # previous 20 B packet time (UTC+8); the event happened between since and row.local
+
+
+def alert_events(packets: Sequence[PacketRow]) -> List[AlertEvent]:
+    """Compare each 20 B packet's cumulative count with the same device's previous one, in packet-time order."""
+    rows, seen = [], set()
+    for row in sorted(packets, key=lambda r: (r.mac, r.unix, r.pass_local, r.line)):
+        if row.crc_ok and row.alert_count is not None and (row.mac, row.hex) not in seen:
+            seen.add((row.mac, row.hex))  # the same packet can appear in two pass files
+            rows.append(row)
+    out: List[AlertEvent] = []
+    prev: Optional[PacketRow] = None
+    for row in rows:
+        count = row.alert_count or 0
+        last = prev.alert_count if prev is not None and prev.mac == row.mac else None
+        if last is None:
+            added, status = (0, "無事件") if count == 0 else (None, f"累計 {count} 次（起始值）")
+        elif last == 255:
+            added, status = (None, "≥255 次（已飽和）") if count == 255 else (count, f"計數重設，重設後 {count} 次")
+        elif count > last:
+            added = count - last
+            status = f"新事件 {added} 次" + ("（達 255 上限，可能更多）" if count == 255 else "")
+        elif count == last:
+            added, status = 0, "無事件" if count == 0 else "無新增"
+        else:
+            added, status = count, f"計數下降（重設或待確認），重設後 {count} 次"
+        out.append(AlertEvent(row, added, status, prev.local if last is not None and prev is not None else ""))
+        prev = row
+    return out
 
 
 @dataclass(frozen=True)
@@ -749,13 +800,53 @@ def riot_messages_table(items: Sequence[PacketRow], caption: str, limit: int) ->
             f'<td>{osm_link(item.lat, item.lng, 6)}</td>',
             f'<td class="mono">{escape(local_time(item.unix) or "—")}</td>',
             f'<td class="number">{item.bat_v:.1f} V</td>',
+            f'<td class="number">{"—" if item.alert_count is None else item.alert_count}</td>',
         ))
     if not rows:
         return '<div class="empty"><p>尚無封包；請確認本機過境紀錄與逐封包 CSV 已產生。</p></div>'
     return render_table(
-        ("接收／過境時間（UTC+8）", "過境（原始檔）", "RSSI / SNR", "Raw hex", "裝置地址", "緯度／經度", "封包時間（Unix → UTC+8）", "電池電壓"),
+        ("接收／過境時間（UTC+8）", "過境（原始檔）", "RSSI / SNR", "Raw hex", "裝置地址", "緯度／經度", "封包時間（Unix → UTC+8）", "電池電壓", "感測事件累計"),
         rows,
         caption,
+    )
+
+
+EVENT_NOTE: Final = (
+    "20 Byte 封包第 20 Byte 為偵測器進入警報狀態的累計次數（0＝無、255＝255 次以上），19 Byte 舊格式無此欄位。"
+    "與同裝置上一筆 20 Byte 封包比較才能確認新增；封包不含事件類型與發生時刻，事件發生於兩筆封包時間之間。"
+)
+
+
+def riot_events_panel(events: Sequence[AlertEvent], caption: str) -> str:
+    """感測事件分頁：統計、事件位置地圖與事件列表（新事件在上）。"""
+    fresh = sorted((e for e in events if e.added), key=lambda e: (e.row.unix, e.row.mac), reverse=True)
+    labels = dict(KNOWN_DEVICES)
+    cards = render_cards([
+        (f"{len(fresh):,}", "新事件封包", "warn" if fresh else ""),
+        (f"{sum(e.added or 0 for e in fresh):,}", "新增事件次數（可確認部分）", ""),
+        (f"{len(events):,}", "含事件欄位的封包（20 B）", ""),
+        (escape(fresh[0].row.local) if fresh else "—", "最近新事件封包", ""),
+    ])
+    pts = [
+        map_point(e.row.lat, e.row.lng, e.row.mac, EVENT_COLOR,
+                  f"<b>{escape(labels.get(e.row.mac, e.row.mac))}</b><br>{escape(e.status)}<br>{escape(e.since or '—')} ～ {escape(e.row.local)}", radius=7)
+        for e in fresh[:200] if plausible(e.row.lat, e.row.lng)
+    ]
+    rows = [(
+        f'<th scope="row"><a href="#riot/{escape(e.row.mac)}">{escape(labels.get(e.row.mac, e.row.mac))}</a><br><span class="mono">{escape(e.row.mac)}</span></th>',
+        f'<td class="mono">{escape(e.row.local or "—")}</td>',
+        f'<td class="mono">{escape(e.since or "—")} ～ {escape(e.row.local or "—")}</td>',
+        f'<td>{escape(e.status)}<br><small class="muted">累計 {e.row.alert_count}</small></td>',
+        f'<td>{osm_link(e.row.lat, e.row.lng, 6) if plausible(e.row.lat, e.row.lng) else "—"}</td>',
+        f'<td class="number">{e.row.bat_v:.1f} V</td>',
+        f'<td class="mono"><a href="raw/{quote(e.row.file)}" download>{escape(e.row.file)}</a><br>行 {e.row.line}</td>',
+    ) for e in sorted(events, key=lambda e: (e.row.unix, e.row.mac), reverse=True)]
+    table = render_table(("裝置", "封包時間（UTC+8）", "事件可能發生區間", "計數判斷", "位置", "電池", "原始檔"), rows, caption) if rows else (
+        '<div class="empty"><p>尚無 20 Byte 事件封包。</p></div>')
+    return (
+        cards
+        + hubcard("事件位置", "紅點為有新事件的封包位置", map_div(pts, 15), wide=True)
+        + panel("事件列表", escape(EVENT_NOTE), table)
     )
 
 
@@ -828,6 +919,7 @@ def predicted_card(predicted: Dict[str, object], now: datetime, title: str = "�
 def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], devices: Sequence[DeviceStats], predicted: Dict[str, object], now: datetime) -> str:
     received = sorted(packets, key=lambda r: (r.pass_local, r.file, r.line), reverse=True)
     decodable = sorted((r for r in packets if r.crc_ok), key=lambda r: (r.unix, r.pass_local), reverse=True)
+    events = alert_events(packets)
     known = [d for d in devices if d.key != "other"]
     other = next((d for d in devices if d.key == "other"), None)
     last = decodable[0] if decodable else None
@@ -870,9 +962,10 @@ def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], d
     )
     out = [
         view_open("riot", "鐳洋 NODE · RIOT-2 M9 · BLACK KITE-2", "鐳洋 Node 網路",
-                  [("dash", "儀表板"), ("passes", "過境"), ("quality", "訊號品質"), ("msgs", "封包內容")],
+                  [("dash", "儀表板"), ("events", "感測事件"), ("passes", "過境"), ("quality", "訊號品質"), ("msgs", "封包內容")],
                   "自製節點經 BLACK KITE-2 上行，鐳洋平台每場過境提供一個 UART 紀錄檔；每小時自動補抓並解析。"),
         tabpanel("dash", dash),
+        tabpanel("events", riot_events_panel(events, "鐳洋感測事件")),
         tabpanel("passes", predicted_card(predicted, now, "未來 48 小時過境預測", 12, wide=True) + panel("逐場次（實際接收）", f"{len(passes)} 場，最新在上；原始檔可直接下載。", riot_passes_table(passes, "逐場次資料"))),
         tabpanel("quality", riot_charts(passes, packets)),
         tabpanel("msgs", panel("封包內容", f"全部 {len(packets):,} 包；依接收場次與行號倒序，最近兩場展開。接收時間為過境時窗（UTC+8）。", riot_packet_contents(packets, "鐳洋封包內容"))),
@@ -930,8 +1023,9 @@ def render_riot_views(passes: Sequence[PassRow], packets: Sequence[PacketRow], d
             ("資料來源", "鐳洋平台每場過境 UART 紀錄檔"),
         ])
         out += [
-            view_open(f"riot/{d.key}", "鐳洋 NODE · 裝置", title, [("dash", "儀表板"), ("msgs", "封包內容"), ("passes", "過境"), ("config", "設定")]),
+            view_open(f"riot/{d.key}", "鐳洋 NODE · 裝置", title, [("dash", "儀表板"), ("events", "感測事件"), ("msgs", "封包內容"), ("passes", "過境"), ("config", "設定")]),
             tabpanel("dash", dash),
+            tabpanel("events", riot_events_panel([e for e in events if e.row.mac == d.key], f"{d.key} 感測事件")),
             tabpanel("msgs", panel("封包內容", f"全部 {len(mine_all):,} 包；最近兩場展開。", riot_packet_contents(mine_all, f"{d.key} 封包內容"))),
             tabpanel("passes", predicted_card(predicted, now, "未來 48 小時過境預測", 12, wide=True) + panel("過境（實際接收）", f"此裝置出現在 {len(my_passes)} 場過境。", riot_passes_table(my_passes, f"{d.key} 過境"))),
             tabpanel("config", hubcard("設定", "裝置登錄資訊（靜態）", config, wide=True)),
@@ -1237,6 +1331,7 @@ def render_overview(passes, packets, devices, units, records, predicted: Dict[st
         ("TCA 仰角／方位", f"{fmt_number(latest.tca_ele)}°／{fmt_number(latest.tca_azi)}°" if latest else "—"),
         ("最新一場封包", f"{latest.n_packets}" if latest else "—"),
         ("最近 24 小時", f"{len(recent)} 場 · {recent_ok} 包"),
+        ("感測事件（20 B）", f"{sum(1 for e in alert_events(packets) if e.added)} 筆新事件封包"),
         ("下次過境預測（TLE）", next_pass_tile(predicted.get("riot") or {}, now)),
     ])
     last_cell = max((float(link.get("last_cell_connection_ms") or 0) for link in links), default=0)
