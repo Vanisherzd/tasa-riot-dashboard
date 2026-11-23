@@ -1588,20 +1588,87 @@
   "mission_utc": "2026-11-20 19:29:58 UTC",
   "local": "2026-11-21 03:29:58 UTC+8",
   "size": "16.4 KB",
-  "link": "/api/lora_file_list/download/1795202998-RIoT-2-M9-uart.bin"
+  "link": "/api/lora_file_list/download/1795202998-RIoT-2-M9-uart.bin",
+  "start": {
+   "ele": 4.93,
+   "azi": 348.48,
+   "t": "03:30:57"
+  },
+  "tca": {
+   "ele": 24.37,
+   "azi": 286.56,
+   "t": "03:35:27"
+  },
+  "end": {
+   "ele": 4.94,
+   "azi": 224.31,
+   "t": "03:39:57"
+  }
  },
  {
   "file": "1795284123-RIoT-2-M9-uart.bin",
   "mission_utc": "2026-11-21 18:02:03 UTC",
   "local": "2026-11-22 02:02:03 UTC+8",
   "size": "22.5 KB",
-  "link": "/api/lora_file_list/download/1795284123-RIoT-2-M9-uart.bin"
+  "link": "/api/lora_file_list/download/1795284123-RIoT-2-M9-uart.bin",
+  "start": {
+   "ele": 4.3,
+   "azi": 37.86,
+   "t": "02:03:02"
+  },
+  "tca": {
+   "ele": 20.24,
+   "azi": 97.2,
+   "t": "02:07:32"
+  },
+  "end": {
+   "ele": 4.2,
+   "azi": 156.45,
+   "t": "02:12:02"
+  }
  },
  {
   "file": "1795328333-RIoT-2-M9-uart.bin",
   "mission_utc": "2026-11-22 06:18:53 UTC",
   "local": "2026-11-22 14:18:53 UTC+8",
   "size": "25.0 KB",
-  "link": "/api/lora_file_list/download/1795328333-RIoT-2-M9-uart.bin"
+  "link": "/api/lora_file_list/download/1795328333-RIoT-2-M9-uart.bin",
+  "start": {
+   "ele": 7.96,
+   "azi": 166.8,
+   "t": "14:19:52"
+  },
+  "tca": {
+   "ele": 87.36,
+   "azi": 74.32,
+   "t": "14:24:22"
+  },
+  "end": {
+   "ele": 8.01,
+   "azi": 349.21,
+   "t": "14:28:52"
+  }
+ },
+ {
+  "file": "1795370968-RIoT-2-M9-uart.bin",
+  "mission_utc": "2026-11-22 18:09:28 UTC",
+  "local": "2026-11-23 02:09:28 UTC+8",
+  "size": "23.7 KB",
+  "link": "/api/lora_file_list/download/1795370968-RIoT-2-M9-uart.bin",
+  "start": {
+   "ele": 5.26,
+   "azi": 34.38,
+   "t": "02:10:27"
+  },
+  "tca": {
+   "ele": 25.16,
+   "azi": 97.77,
+   "t": "02:14:57"
+  },
+  "end": {
+   "ele": 5.22,
+   "azi": 161.32,
+   "t": "02:19:27"
+  }
  }
 ]
