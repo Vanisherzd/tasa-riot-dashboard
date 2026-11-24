@@ -1,6 +1,6 @@
 """Download 鐳洋 M9 pass files (UART logs) listed at https://210.61.153.16/api/lora_file_list.
 
-usage: python3 scripts/fetch_riot_passes.py [--since 2026-10-01] [--out data/rx_logs/m9_passes]
+usage: python3 scripts/fetch_riot_passes.py [--since 2026-09-01] [--out data/rx_logs/m9_passes]
 
 Writes <out>/files.json (one entry per pass: file, mission_utc, local, size, start/tca/end
 elevation+azimuth) and downloads the .bin files not yet present. Then parse each with

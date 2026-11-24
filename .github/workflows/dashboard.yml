@@ -34,7 +34,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Fetch all RIOT passes
-        run: python3 scripts/fetch_riot_passes.py --since 2026-10-01
+        run: python3 scripts/fetch_riot_passes.py --since 2026-09-01
       - name: Summarize RIOT passes
         run: python3 scripts/summarize_riot_passes.py
       - name: Restore FOSSA message history
