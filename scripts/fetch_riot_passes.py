@@ -69,7 +69,7 @@ def listing() -> list[dict]:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--since", default="2026-10-01", help="mission date (UTC) lower bound")
+    ap.add_argument("--since", default="2026-09-01", help="mission date (UTC) lower bound")
     ap.add_argument("--out", default="data/rx_logs/m9_passes")
     a = ap.parse_args()
     out = Path(a.out)

@@ -22,6 +22,10 @@ def packets(path: Path) -> list[dict]:
     rows = []
     for r in p.records(text):
         b = r["bytes"]
+        if r["size"] == 12 and b[:3] == b"ID0":  # early ASCII test format, Sept 2026 ("ID02: 046055"): no position or time
+            rows.append({"mac": b[:4].decode("latin-1"), "lat": "", "lng": "", "unix": "", "local": "", "bat_v": "", "crc_ok": False,
+                         "size": r["size"], "line": r["line"], "rssi": r["rssi"], "snr": r["snr"], "hex": b.hex(" ")})
+            continue
         if r["size"] < 19 or len(b) < 19 or b[0] != 0xCC:
             continue
         d = p.decode(b[:19])
